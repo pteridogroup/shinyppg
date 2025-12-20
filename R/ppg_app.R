@@ -3,6 +3,9 @@
 #' Run a Shiny app to view the Pteridophyte Phylogeny Group (PPG)
 #' taxonomic database.
 #'
+#' @param data_source Where to load data from. Options are "local" (built-in
+#'   sample data, default), "remote" (download from GitHub), or "repo"
+#'   (read from local repository at /home/shiny/ppg).
 #' @import shiny
 #' @returns An object that represents the app. This function is normally called
 #' for its side-effect of starting a Shiny app that can be accessed in a web
@@ -10,9 +13,13 @@
 #' @export
 #' @examples
 #' if (interactive()) {
+#'   # Use sample data (fast, good for testing)
 #'   ppg_app()
+#'   
+#'   # Use full dataset from GitHub
+#'   ppg_app("remote")
 #' }
-ppg_app <- function() {
+ppg_app <- function(data_source = "local") {
   ui <- fluidPage(
     titlePanel("PPG Taxonomic Database Viewer"),
     shiny::uiOutput("main_content")
@@ -31,8 +38,8 @@ ppg_app <- function() {
       extra_cols = c("ipniURL", "modifiedBy", "modifiedByID")
     )
 
-    # Load PPG data (using local sample data for viewer)
-    ppg <- reactiveVal(load_data("local"))
+    # Load PPG data
+    ppg <- reactiveVal(load_data(data_source))
     ppg_remaining <- reactiveVal(data.frame())
 
     # Specify UI
