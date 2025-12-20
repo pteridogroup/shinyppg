@@ -659,3 +659,29 @@ make_empty_ppg <- function(default_ppg_cols) {
     tidyr::pivot_wider(names_from = 1, values_from = value) |>
     dplyr::filter(FALSE)
 }
+
+#' Randomly capitalize the letters of a string
+#'
+#' Single string
+str_to_random_single <- function(string, n_cap = NULL) {
+  string <- stringr::str_to_lower(string)
+  n_chr_string <- nchar(string)
+  if (is.null(n_cap)) {
+    n_cap <- floor(n_chr_string / 2)
+  }
+  cap_index <- sample(1:n_chr_string, n_cap)
+  str_separated <- stringr::str_split_1(string, "")
+  str_separated[cap_index] <- stringr::str_to_upper(str_separated[cap_index])
+  paste(str_separated, collapse = "")
+}
+
+#' Randomly capitalize the letters of a string
+#'
+#' Vectorized
+#'
+#' @param x Character vector
+#' @param n_cap Number of characters to capitalize. Default will capitalize
+#'   half (rounded down)
+str_to_random <- function(x, n_cap = NULL) {
+  purrr::map_chr(x, ~str_to_random_single(.x, n_cap = n_cap))
+}
