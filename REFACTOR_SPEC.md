@@ -158,8 +158,8 @@ preserving all viewing, browsing, and inspection features.
 
 1. ✅ Create this specification document
 2. ✅ Remove authentication system (Phase 1)
-3. ⏳ Remove editing modules and their calls (Phase 2)
-4. ⏳ Simplify and redesign UI (Phase 3)
+3. ✅ Remove editing modules and their calls (Phase 2)
+4. ✅ Simplify and redesign UI (Phase 3)
 5. ⏳ Refactor data loading and display (Phase 4)
 6. ⏳ Update dependencies (Phase 5)
 7. ⏳ Update documentation (Phase 6)

@@ -49,45 +49,49 @@ compose_name_ui <- function(id) {
 #' @returns Server logic
 #' @noRd
 compose_name_server <- function(
-  id, higher_names, epithets, authors, composed_name, ppg, rows_selected,
-  fill_sci_name = FALSE, credentials) {
-
+  id,
+  higher_names,
+  epithets,
+  authors,
+  composed_name,
+  ppg,
+  rows_selected,
+  fill_sci_name = FALSE
+) {
   # Check args
   stopifnot(is.reactive(composed_name))
   stopifnot(is.reactive(rows_selected))
   stopifnot(is.reactive(ppg))
-  stopifnot(is.reactive(credentials))
   stopifnot(!is.reactive(higher_names))
   stopifnot(!is.reactive(epithets))
   stopifnot(!is.reactive(authors))
   stopifnot(!is.reactive(fill_sci_name))
 
   moduleServer(id, function(input, output, session) {
-
     # Update scientific name from composed input
     observeEvent(input$scientificName, {
       composed_name(input$scientificName)
     })
 
     update_selectize_compose_name(
-      session, "higher_name",
+      session,
+      "higher_name",
       choices = higher_names,
-      placeholder = "Select higher name",
-      credentials = credentials
+      placeholder = "Select higher name"
     )
 
     update_selectize_compose_name(
-      session, "epithet",
+      session,
+      "epithet",
       choices = epithets,
-      placeholder = "Select specific epithet",
-      credentials = credentials
+      placeholder = "Select specific epithet"
     )
 
     update_selectize_compose_name(
-      session, "author",
+      session,
+      "author",
       choices = authors,
-      placeholder = "Select author",
-      credentials = credentials
+      placeholder = "Select author"
     )
 
     observeEvent(input$higher_name, {

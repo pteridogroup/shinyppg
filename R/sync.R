@@ -2,8 +2,14 @@
 #' see https://github.com/rstudio/shiny/issues/3305#issuecomment-1407028520
 #' @noRd
 #' @autoglobal
-textInput2 <- function(inputId, label, value = "", width = NULL,
-                       placeholder = NULL, maxlength = NULL) {
+textInput2 <- function(
+  inputId,
+  label,
+  value = "",
+  width = NULL,
+  placeholder = NULL,
+  maxlength = NULL
+) {
   tag <- shiny::textInput(
     inputId = inputId,
     label = label,
@@ -13,10 +19,9 @@ textInput2 <- function(inputId, label, value = "", width = NULL,
   )
 
   if (!is.null(maxlength)) {
-    htmltools::tagQuery(tag)$
-      children("input")$
-      addAttrs(maxlength = maxlength)$
-      allTags()
+    htmltools::tagQuery(tag)$children("input")$addAttrs(
+      maxlength = maxlength
+    )$allTags()
   } else {
     tag
   }
@@ -64,9 +69,8 @@ sync_ui <- function(id) {
 #' Server for syncing
 #' @autoglobal
 #' @noRd
-sync_server <- function(id, ppg, credentials, dry_run = FALSE) {
+sync_server <- function(id, ppg, dry_run = FALSE) {
   moduleServer(id, function(input, output, session) {
-    stopifnot(is.reactive(credentials))
     stopifnot(is.reactive(ppg))
 
     # Setup repo

@@ -37,7 +37,6 @@ autocomplete_ui <- function(id, col_select, help_text, multiple = FALSE) {
 #' @param rows_selected Reactive value; index of selected rows
 #' @param fill_name Logical; should the selected value in the menu be
 #'   auto-filled from the selected row?
-#' @param credentials List; credentials passed from login
 #' @param ... Passed to a filter() call to filter the rows of the ppg dataframe
 #'   to only the rows that should be used for providing items in the selectize
 #'   menu
@@ -45,14 +44,15 @@ autocomplete_ui <- function(id, col_select, help_text, multiple = FALSE) {
 #' @autoglobal
 #' @noRd
 autocomplete_server <- function(
-    id,
-    ppg,
-    rows_selected,
-    placeholder,
-    col_select,
-    fill_name = FALSE,
-    switch_off = NULL,
-    credentials, ...) {
+  id,
+  ppg,
+  rows_selected,
+  placeholder,
+  col_select,
+  fill_name = FALSE,
+  switch_off = NULL,
+  ...
+) {
   stopifnot(is.reactive(ppg))
   stopifnot(!is.reactive(fill_name))
   if (fill_name) {
@@ -74,7 +74,6 @@ autocomplete_server <- function(
           sort()
       })
     observe({
-      shiny::req(credentials()$user_auth)
       choices <- accepted_higher_names()
       if (length(choices) > 0) {
         initialize_selectize_input(

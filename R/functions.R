@@ -32,7 +32,6 @@ set_asc_desc <- function(col_list) {
 #' @return Tibble
 #' @noRd
 load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
-
   if (data_source == "local") {
     return(shinyppg::ppg_small)
   } else if (data_source == "repo") {
@@ -43,7 +42,10 @@ load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
   } else {
     path <- "https://raw.githubusercontent.com/joelnitta/ppg-test/main/data/ppg.csv"
   }
-  ppg <- readr::read_csv(path, col_types = readr::cols(.default = readr::col_character())) |>
+  ppg <- readr::read_csv(
+    path,
+    col_types = readr::cols(.default = readr::col_character())
+  ) |>
     as.data.frame()
   attributes(ppg)$spec <- NULL
   return(ppg)
@@ -87,13 +89,15 @@ load_pterido_sp_epithets <- function() {
 #' @param inputId The id of the input object.
 #' @param choices Selection choices to include in the selectize input
 #' @param placeholder Text to display before selection is made.
-#' @param credentials List; credentials passed from login
 #' @return Output of updateSelectizeInput()
 #' @noRd
 update_selectize_compose_name <- function(
-    session, inputId, choices, placeholder, credentials) {
+  session,
+  inputId,
+  choices,
+  placeholder
+) {
   shiny::observe({
-    shiny::req(credentials()$user_auth)
     updateSelectizeInput(
       session = session,
       inputId = inputId,
@@ -188,7 +192,11 @@ pkgload_load_all <- function(...) {
 #'
 #' @noRd
 initialize_selectize_input <- function(
-    session, choices, placeholder, selected) {
+  session,
+  choices,
+  placeholder,
+  selected
+) {
   updateSelectizeInput(
     session,
     inputId = "autocomp_col",
@@ -420,7 +428,8 @@ fetch_synonyms <- function(tax_dat, target_taxon) {
     dplyr::select(acceptedNameUsageID = taxonID) |>
     dplyr::inner_join(
       tax_dat,
-      by = "acceptedNameUsageID", relationship = "one-to-many"
+      by = "acceptedNameUsageID",
+      relationship = "one-to-many"
     ) |>
     dplyr::pull(taxonID)
 }
@@ -442,7 +451,10 @@ fetch_synonyms <- function(tax_dat, target_taxon) {
 #' @examples
 #' fetch_children_one_level_single(ppg_small, "Hymenophyllaceae Mart.")
 fetch_children_one_level_single <- function(
-    tax_dat, target_taxon, current_level = 1) {
+  tax_dat,
+  target_taxon,
+  current_level = 1
+) {
   query_dat <-
     tax_dat |>
     dplyr::filter(scientificName == target_taxon) |>
@@ -463,7 +475,8 @@ fetch_children_one_level_single <- function(
     dplyr::select(parentNameUsageID = taxonID) |>
     dplyr::inner_join(
       tax_dat,
-      by = "parentNameUsageID", relationship = "one-to-many"
+      by = "parentNameUsageID",
+      relationship = "one-to-many"
     ) |>
     dplyr::select(tidyselect::all_of(colnames(tax_dat)))
 }
@@ -516,7 +529,9 @@ fetch_children <- function(tax_dat, target_taxon, out_type = "vec") {
     return(NULL)
   }
 
-  if (out_type == "vec") res <- dplyr::pull(res, taxonID)
+  if (out_type == "vec") {
+    res <- dplyr::pull(res, taxonID)
+  }
 
   res
 }
@@ -577,7 +592,9 @@ subset_to_taxon <- function(tax_dat, target_taxon) {
     msg = "target_taxon not found in tax_dat"
   )
   target_ids <- purrr::map(
-    target_taxon, ~ subset_to_taxon_single(tax_dat, .)) |>
+    target_taxon,
+    ~ subset_to_taxon_single(tax_dat, .)
+  ) |>
     unlist() |>
     unique()
   tax_dat[tax_dat$taxonID %in% target_ids, ]
@@ -597,7 +614,8 @@ subset_to_taxon <- function(tax_dat, target_taxon) {
 #' @noRd
 subset_cols_to_fill <- function(settings, cols_fill, cols_default) {
   observeEvent(
-    settings$autofill_id(), {
+    settings$autofill_id(),
+    {
       if (settings$autofill_id()) {
         cols_fill(cols_default)
       } else {
@@ -683,5 +701,5 @@ str_to_random_single <- function(string, n_cap = NULL) {
 #' @param n_cap Number of characters to capitalize. Default will capitalize
 #'   half (rounded down)
 str_to_random <- function(x, n_cap = NULL) {
-  purrr::map_chr(x, ~str_to_random_single(.x, n_cap = n_cap))
+  purrr::map_chr(x, ~ str_to_random_single(.x, n_cap = n_cap))
 }

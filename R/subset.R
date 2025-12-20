@@ -40,15 +40,14 @@ subset_ui <- function(id) {
 #' @param ppg Reactive dataframe (tibble) of PPG data
 #' @param ppg_remaining Reactive dataframe (tibble) of PPG data; data that was
 #'   *not* selected for subsetting previously.
-#' @param credentials List; credentials passed from login
 #' @returns Server logic
 #' @autoglobal
 #' @noRd
 subset_server <- function(
-    id,
-    ppg,
-    ppg_remaining,
-    credentials) {
+  id,
+  ppg,
+  ppg_remaining
+) {
   # Check args
   stopifnot(is.reactive(ppg))
   stopifnot(is.reactive(ppg_remaining))
@@ -64,7 +63,6 @@ subset_server <- function(
       placeholder = "Select order",
       col_select = NULL,
       fill_name = FALSE,
-      credentials = credentials,
       switch_off = is_subset,
       taxonRank == "order"
     )
@@ -75,7 +73,6 @@ subset_server <- function(
       placeholder = "Select family",
       col_select = NULL,
       fill_name = FALSE,
-      credentials = credentials,
       switch_off = is_subset,
       taxonRank == "family"
     )
@@ -86,7 +83,6 @@ subset_server <- function(
       placeholder = "Select genus",
       col_select = NULL,
       fill_name = FALSE,
-      credentials = credentials,
       switch_off = is_subset,
       taxonRank == "genus"
     )
