@@ -1,6 +1,26 @@
 # shinyppg
 
-A Shiny app to edit the Pteridophyte Phylogeny Group (PPG) database
+A Shiny app to view the Pteridophyte Phylogeny Group (PPG) taxonomic database.
+
+## Installation
+
+Install from GitHub:
+
+```r
+# install.packages("remotes")
+remotes::install_github("pteridogroup/shinyppg")
+```
+
+## Usage
+
+Launch the app with:
+
+```r
+library(shinyppg)
+ppg_app()
+```
+
+The app provides a viewer interface to browse and explore PPG taxonomic data. You can filter by order, family, or genus to view specific taxonomic groups.
 
 ## Deploying
 

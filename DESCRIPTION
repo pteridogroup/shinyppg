@@ -1,5 +1,5 @@
 Package: shinyppg
-Title: Manage PPG Data
+Title: View PPG Taxonomic Data
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Joel H.",
@@ -7,8 +7,8 @@ Authors@R:
            role = c("aut", "cre"),
            email = "joelnitta@gmail.com",
            comment = c(ORCID = "0000-0003-4719-7472"))
-Description: Provides a Shiny app to manage Pteridophyte Phylogeny Group (PPG)
-  data.
+Description: Provides a Shiny app to view Pteridophyte Phylogeny Group (PPG)
+  taxonomic data.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace", "rd",
@@ -16,22 +16,16 @@ Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace", "rd",
 RoxygenNote: 7.3.1
 Imports: 
     assertthat,
-    daff,
     dplyr,
     DT,
     dwctaxon (>= 2.0.3.9001),
     fs,
-    gert,
     glue,
     htmltools,
-    markdown,
-    pkgload,
     purrr,
-    reactable,
     readr,
     rlang,
     shiny,
-    shinyauthr,
     shinyjs,
     stringr,
     tidyr,
@@ -42,8 +36,6 @@ LazyData: true
 Suggests: 
     assertr,
     roxyglobals,
-    sodium,
-    tibble,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Config/roxyglobals/filename: globals.R
