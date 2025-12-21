@@ -52,11 +52,10 @@ display_ppg_server <- function(id, ppg) {
       DT::renderDataTable(
         {
           DT::datatable(
-            data = ppg() |> linkize_urls("ipniURL"),
+            data = ppg(),
             rownames = FALSE,
             filter = "top",
             selection = "multiple",
-            # display ipniURL as a clickable link
             escape = FALSE,
             options = list(
               order = list(
@@ -68,8 +67,7 @@ display_ppg_server <- function(id, ppg) {
                   targets = c(
                     select_sort_col(ppg(), "taxonID"),
                     select_sort_col(ppg(), "acceptedNameUsageID"),
-                    select_sort_col(ppg(), "parentNameUsageID"),
-                    select_sort_col(ppg(), "modifiedByID")
+                    select_sort_col(ppg(), "parentNameUsageID")
                   ),
                   visible = column_visibility()
                 )

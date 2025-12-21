@@ -31,8 +31,11 @@ Click **"Reset"** to return to viewing the complete dataset.
 The data follows the [Darwin Core Taxon (DwC Taxon) standard](https://dwc.tdwg.org/terms/#taxon). Key columns include:
 
 - **scientificName**: The full scientific name including author
+- **scientificNameAuthorship**: The authorship of the name
 - **taxonRank**: The taxonomic rank (species, genus, family, etc.)
 - **taxonomicStatus**: Whether the name is accepted or a synonym
+- **nomenclaturalStatus**: The nomenclatural status (e.g., valid)
+- **namePublishedIn**: The original publication of the name
 - **acceptedNameUsage**: For synonyms, the accepted name
 - **parentNameUsage**: The parent taxon in the hierarchy
 
@@ -58,13 +61,22 @@ Note that while you have filtered the data, any selected rows stay selected (eve
 
 ## About Advanced Columns
 
-The PPG database includes several technical columns that provide additional information:
+The PPG database includes several technical columns that provide additional
+information:
 
 - **taxonID**: A unique identifier code for each row
 - **acceptedNameUsageID**: Links synonyms to their accepted name
 - **parentNameUsageID**: Links taxa to their parent in the hierarchy
+- **created**: The date when the record was created
+- **modified**: The date when the record was last modified
 
-These columns ensure accurate linking between related taxa. While `scientificName` should theoretically be unique, historical botanical naming means some names have been published multiple times by the same author, necessitating unique identifiers.
+These columns ensure accurate linking between related taxa. While
+`scientificName` should theoretically be unique, historical botanical naming
+means some names have been published multiple times by the same author,
+necessitating unique identifiers.
+
+The `acceptedNameUsage` and `parentNameUsage` columns are automatically
+generated from the corresponding ID columns to provide human-readable names.
 
 Click the **"Show advanced columns"** button below the table to toggle visibility of these technical columns.
 

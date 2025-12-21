@@ -40,7 +40,7 @@ load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
     } # TODO: fetch and fast-forward main if repo already exists
     path <- "/home/shiny/ppg/data/ppg.csv"
   } else {
-    path <- "https://raw.githubusercontent.com/joelnitta/ppg-test/main/data/ppg.csv"
+    path <- "https://raw.githubusercontent.com/pteridogroup/ppg/refs/heads/main/data/ppg.csv"
   }
   ppg <- readr::read_csv(
     path,
@@ -48,6 +48,25 @@ load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
   ) |>
     as.data.frame()
   attributes(ppg)$spec <- NULL
+  # Remove obsolete columns if they exist (for backward compatibility)
+  obsolete_cols <- c("ipniURL", "modifiedBy", "modifiedByID")
+  ppg <- ppg[, !names(ppg) %in% obsolete_cols, drop = FALSE]
+  # Generate acceptedNameUsage and parentNameUsage columns
+  ppg <- ppg |>
+    dwctaxon::dct_fill_col(
+      fill_to = "acceptedNameUsage",
+      fill_from = "scientificName",
+      match_to = "taxonID",
+      match_from = "acceptedNameUsageID",
+      stamp_modified = FALSE
+    ) |>
+    dwctaxon::dct_fill_col(
+      fill_to = "parentNameUsage",
+      fill_from = "scientificName",
+      match_to = "taxonID",
+      match_from = "parentNameUsageID",
+      stamp_modified = FALSE
+    )
   return(ppg)
 }
 
@@ -345,7 +364,7 @@ undo_change <- function(data) {
 #' Internal function
 #'
 #' @param tax_dat Taxonomic data in DwC format
-#' @param target_taxon Name of a single taxon for subsetting
+#' @param target_taxon_id taxonID of a single taxon for subsetting
 #' @param current_level Counter to keep track of the number of times this
 #'   function has been used in a loop
 #'
@@ -353,15 +372,15 @@ undo_change <- function(data) {
 #'
 #' @noRd
 #' @autoglobal
-fetch_single_parent <- function(tax_dat, target_taxon, current_level = 1) {
+fetch_single_parent <- function(tax_dat, target_taxon_id, current_level = 1) {
   query_dat <-
     tax_dat |>
-    dplyr::filter(scientificName == target_taxon) |>
+    dplyr::filter(taxonID == target_taxon_id) |>
     dplyr::select(taxonID = parentNameUsageID)
 
   assertthat::assert_that(
     nrow(query_dat) == 1,
-    msg = "target_taxon does not match exactly one row in tax_dat"
+    msg = "target_taxon_id does not match exactly one row in tax_dat"
   )
 
   n_ranks <- length(unique(tax_dat$taxonRank))
@@ -383,24 +402,24 @@ fetch_single_parent <- function(tax_dat, target_taxon, current_level = 1) {
 #' Internal function
 #'
 #' @param tax_dat Taxonomic data in DwC format
-#' @param target_taxon Name of a single taxon for subsetting
+#' @param target_taxon_id taxonID of a single taxon for subsetting
 #'
 #' @return taxonIDs of all the recursive parents of the target taxon
 #'
 #' @noRd
 #' @autoglobal
-fetch_parents <- function(tax_dat, target_taxon) {
+fetch_parents <- function(tax_dat, target_taxon_id) {
   all_parents_list <- list()
   i <- 0
 
   while (TRUE) {
     i <- i + 1
-    this_parent <- fetch_single_parent(tax_dat, target_taxon, i)
+    this_parent <- fetch_single_parent(tax_dat, target_taxon_id, i)
     if (is.null(this_parent)) {
       break
     }
     all_parents_list[[i]] <- this_parent
-    target_taxon <- this_parent$scientificName
+    target_taxon_id <- this_parent$taxonID
   }
 
   if (length(all_parents_list) > 0) {
@@ -417,14 +436,14 @@ fetch_parents <- function(tax_dat, target_taxon) {
 #' Internal function
 #'
 #' @param tax_dat Taxonomic data in DwC format
-#' @param target_taxon Name of a single taxon for subsetting
+#' @param target_taxon_id taxonID of a single taxon for subsetting
 #'
 #' @return taxonIDs of all the synonyms of target taxon
 #'
 #' @noRd
 #' @autoglobal
-fetch_synonyms <- function(tax_dat, target_taxon) {
-  dplyr::filter(tax_dat, scientificName == target_taxon) |>
+fetch_synonyms <- function(tax_dat, target_taxon_id) {
+  dplyr::filter(tax_dat, taxonID == target_taxon_id) |>
     dplyr::select(acceptedNameUsageID = taxonID) |>
     dplyr::inner_join(
       tax_dat,
@@ -442,52 +461,39 @@ fetch_synonyms <- function(tax_dat, target_taxon) {
 #' Internal function
 #'
 #' @param tax_dat Taxonomic data in DwC format
-#' @param target_taxon Name of a single taxon for subsetting
+#' @param target_taxon_id taxonID of a single taxon for subsetting
 #'
 #' @return taxonIDs of all the children of the target taxon, one level down
 #'
 #' @noRd
 #' @autoglobal
 #' @examples
-#' fetch_children_one_level_single(ppg_small, "Hymenophyllaceae Mart.")
+#' fetch_children_one_level_single(ppg_small, "wfo-4000001234")
 fetch_children_one_level_single <- function(
   tax_dat,
-  target_taxon,
+  target_taxon_id,
   current_level = 1
 ) {
-  query_dat <-
-    tax_dat |>
-    dplyr::filter(scientificName == target_taxon) |>
-    dplyr::select(taxonID)
-
-  assertthat::assert_that(
-    nrow(query_dat) == 1,
-    msg = "target_taxon does not match exactly one row in tax_dat"
-  )
-
   n_ranks <- length(unique(tax_dat$taxonRank))
 
-  if (is.na(query_dat$taxonID) || current_level > n_ranks) {
+  if (is.na(target_taxon_id) || current_level > n_ranks) {
     return(NULL)
   }
 
-  dplyr::filter(tax_dat, scientificName == target_taxon) |>
-    dplyr::select(parentNameUsageID = taxonID) |>
-    dplyr::inner_join(
-      tax_dat,
-      by = "parentNameUsageID",
-      relationship = "one-to-many"
-    ) |>
+  dplyr::filter(tax_dat, parentNameUsageID == target_taxon_id) |>
     dplyr::select(tidyselect::all_of(colnames(tax_dat)))
 }
 
-fetch_children_one_level <- function(tax_dat, target_taxon, current_level = 1) {
-  target_taxon <- intersect(tax_dat$parentNameUsage, target_taxon)
-  if (length(target_taxon) < 1) {
+fetch_children_one_level <- function(
+  tax_dat,
+  target_taxon_ids,
+  current_level = 1
+) {
+  if (length(target_taxon_ids) < 1) {
     return(NULL)
   }
   purrr::map_df(
-    target_taxon,
+    target_taxon_ids,
     ~ fetch_children_one_level_single(tax_dat, ., current_level)
   )
 }
@@ -497,7 +503,7 @@ fetch_children_one_level <- function(tax_dat, target_taxon, current_level = 1) {
 #' Internal function
 #'
 #' @param tax_dat Taxonomic data in DwC format
-#' @param target_taxon Name of a single taxon for subsetting
+#' @param target_taxon_id taxonID of a single taxon for subsetting
 #' @param out_type "vec" to return a vector; returns dataframe otherwise
 #'
 #' @return taxonIDs of the target taxon, all its parents, all its children,
@@ -506,21 +512,22 @@ fetch_children_one_level <- function(tax_dat, target_taxon, current_level = 1) {
 #' @noRd
 #' @autoglobal
 #' @examples
-#' fetch_children(ppg_full, "Cyatheales A. B. Frank")
-fetch_children <- function(tax_dat, target_taxon, out_type = "vec") {
+#' fetch_children(ppg_full, "wfo-4000001234")
+fetch_children <- function(tax_dat, target_taxon_id, out_type = "vec") {
   all_children_list <- list()
   i <- 0
+  target_taxon_ids <- target_taxon_id
 
   while (TRUE) {
     i <- i + 1
-    this_child <- fetch_children_one_level(tax_dat, target_taxon, i)
+    this_child <- fetch_children_one_level(tax_dat, target_taxon_ids, i)
     if (is.null(this_child) || nrow(this_child) == 0) {
       break
     }
     all_children_list[[i]] <- this_child
-    target_taxon <- this_child |>
+    target_taxon_ids <- this_child |>
       dplyr::filter(taxonomicStatus == "accepted") |>
-      dplyr::pull(scientificName)
+      dplyr::pull(taxonID)
   }
 
   if (length(all_children_list) > 0) {
@@ -561,9 +568,9 @@ subset_to_taxon_single <- function(tax_dat, target_taxon) {
 
   c(
     query_dat,
-    fetch_parents(tax_dat, target_taxon),
-    fetch_synonyms(tax_dat, target_taxon),
-    fetch_children(tax_dat, target_taxon)
+    fetch_parents(tax_dat, query_dat),
+    fetch_synonyms(tax_dat, query_dat),
+    fetch_children(tax_dat, query_dat)
   )
 }
 

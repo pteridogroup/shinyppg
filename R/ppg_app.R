@@ -15,7 +15,7 @@
 #' if (interactive()) {
 #'   # Use sample data (fast, good for testing)
 #'   ppg_app()
-#'   
+#'
 #'   # Use full dataset from GitHub
 #'   ppg_app("remote")
 #' }
@@ -33,9 +33,8 @@ ppg_app <- function(data_source = "local") {
       check_mapping_parent_accepted = TRUE,
       remap_parent = TRUE,
       valid_tax_status = paste(valid_tax_status, collapse = ", "),
-      stamp_modified_by = TRUE,
-      stamp_modified_by_id = TRUE,
-      extra_cols = c("ipniURL", "modifiedBy", "modifiedByID")
+      stamp_modified_by = FALSE,
+      stamp_modified_by_id = FALSE
     )
 
     # Load PPG data

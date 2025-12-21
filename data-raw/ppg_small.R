@@ -8,6 +8,9 @@
 library(dplyr)
 library(assertr)
 
+# Load package functions
+devtools::load_all()
+
 # download full dataset
 full_data <- load_data(data_source = "download")
 
@@ -18,7 +21,19 @@ ranks <- full_data |>
 
 # filter data to only genus and above
 data_genus_above <- full_data |>
-  filter(taxonRank %in% c("genus", "tribe", "subfamily", "family", "order"))
+  filter(
+    taxonRank %in%
+      c(
+        "genus",
+        "tribe",
+        "subfamily",
+        "family",
+        "suborder",
+        "order",
+        "subclass",
+        "class"
+      )
+  )
 
 # filter to accepted infraspecific
 data_subspecies <- full_data |>
@@ -34,12 +49,26 @@ data_species <- data_subspecies |>
 # combine into test dataset
 ppg_small <-
   bind_rows(data_subspecies, data_species, data_genus_above) |>
-  # TODO remove this once `modifiedBy` and `modifiedByID` are in original PPG
-  dplyr::mutate(
-    modified = as.character(modified),
-    modifiedBy = NA_character_,
-    modifiedByID = NA_character_
+  # Fill in acceptedNameUsage from scientificName
+  dwctaxon::dct_fill_col(
+    fill_to = "acceptedNameUsage",
+    fill_from = "scientificName",
+    match_to = "taxonID",
+    match_from = "acceptedNameUsageID",
+    stamp_modified = FALSE
   ) |>
+  # Fill in parentNameUsage from scientificName
+  dwctaxon::dct_fill_col(
+    fill_to = "parentNameUsage",
+    fill_from = "scientificName",
+    match_to = "taxonID",
+    match_from = "parentNameUsageID",
+    stamp_modified = FALSE
+  ) |>
+  dplyr::mutate(
+    modified = as.character(modified)
+  ) |>
+  select(-created) |>
   # should pass using the same checks as the full dataset
   dwctaxon::dct_validate(
     valid_tax_status = "variant, accepted, synonym, ambiguous synonym",

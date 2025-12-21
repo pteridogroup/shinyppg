@@ -22,16 +22,15 @@ test_that("undo works", {
   dwctaxon::dct_options(
     user_name = "me",
     user_id = "123",
-    stamp_modified_by = TRUE,
-    stamp_modified_by_id = TRUE,
-    extra_cols = c("modifiedBy", "modifiedByID")
+    stamp_modified_by = FALSE,
+    stamp_modified_by_id = FALSE
   )
   ppg <- ppg_small
   ppg_mod_1 <- ppg |>
     dwctaxon::dct_modify_row(
-      scientificName = "Loxogramme antrophyoides (Baker) C.Chr.",
+      scientificName = "Selliguea hastata",
       taxonomicStatus = "synonym",
-      parentNameUsage = "Cyathea meridensis H.Karst."
+      parentNameUsage = "Abacopteris"
     )
   save_patch(ppg, ppg_mod_1)
   ppg_mod_2 <- ppg_mod_1 |>
@@ -48,28 +47,25 @@ test_that("undo works", {
 })
 
 test_that("subsetting to taxonomic group works on single taxon", {
-  crep_data <- subset_to_taxon(ppg_small, "Crepidomanes (C. Presl) C. Presl")
-  expect_snapshot(crep_data)
+  abac_data <- subset_to_taxon(ppg_small, "Abacopteris")
+  expect_snapshot(abac_data)
   expect_no_error(
-    dct_validate(
-      crep_data,
-      extra_cols = c("modifiedBy", "modifiedByID", "ipniURL")
-    )
+    dct_validate(abac_data)
   )
 })
 
 test_that("subsetting to taxonomic group works on multiple taxa", {
   sub_data <- subset_to_taxon(
-    ppg_small, c(
-      "Crepidomanes (C. Presl) C. Presl",
-      "Abrodictyum C.Presl"
+    ppg_small,
+    c(
+      "Abacopteris",
+      "Abrodictyum"
     )
   )
   expect_snapshot(sub_data)
   expect_no_error(
     dct_validate(
       sub_data,
-      extra_cols = c("modifiedBy", "modifiedByID", "ipniURL"),
       on_success = "logical"
     )
   )
