@@ -15,6 +15,7 @@ display_ppg_ui <- function(id) {
     actionButton(NS(id, "jump_to_parent"), "Jump to parent"),
     actionButton(NS(id, "jump_to_accepted"), "Jump to accepted"),
     actionButton(NS(id, "show_synonyms"), "Show synonyms"),
+    actionButton(NS(id, "show_children"), "Show children"),
     actionButton(NS(id, "clear_search"), "Clear search"),
     actionButton(NS(id, "toggle_columns"), "Show higher taxa"),
     textOutput(NS(id, "selected_rows_message"))
@@ -56,6 +57,7 @@ display_ppg_server <- function(id, ppg) {
     shinyjs::disable("jump_to_parent")
     shinyjs::disable("jump_to_accepted")
     shinyjs::disable("show_synonyms")
+    shinyjs::disable("show_children")
 
     # Set up PPG table
     render_table <- function() {
@@ -213,15 +215,29 @@ display_ppg_server <- function(id, ppg) {
           } else {
             shinyjs::disable("show_synonyms")
           }
+
+          # Enable show children if taxon has children
+          taxon_id <- selected_data$taxonID
+          has_children <- any(
+            ppg()$parentNameUsageID == taxon_id,
+            na.rm = TRUE
+          )
+          if (has_children) {
+            shinyjs::enable("show_children")
+          } else {
+            shinyjs::disable("show_children")
+          }
         } else {
           shinyjs::disable("jump_to_parent")
           shinyjs::disable("jump_to_accepted")
           shinyjs::disable("show_synonyms")
+          shinyjs::disable("show_children")
         }
       } else {
         shinyjs::disable("jump_to_parent")
         shinyjs::disable("jump_to_accepted")
         shinyjs::disable("show_synonyms")
+        shinyjs::disable("show_children")
       }
     })
 
@@ -313,6 +329,37 @@ display_ppg_server <- function(id, ppg) {
 
               # Search for taxonID in the acceptedNameUsageID column
               col_index <- which(names(ppg()) == "acceptedNameUsageID") - 1
+              search_cols <- rep("", ncol(ppg()))
+              search_cols[col_index + 1] <- taxon_id
+
+              DT::updateSearch(
+                dt_proxy,
+                keywords = list(global = "", columns = search_cols)
+              )
+            }
+          }
+        }
+      }
+    })
+
+    # Show all children of selected taxon
+    observeEvent(input$show_children, {
+      if (length(selected_rows()) == 1) {
+        row_index <- selected_rows()
+        if (row_index > 0 && row_index <= nrow(ppg())) {
+          selected_data <- ppg()[row_index, ]
+          taxon_id <- selected_data$taxonID
+
+          if (!is.na(taxon_id) && taxon_id != "") {
+            # Find all rows where parentNameUsageID matches this taxon
+            child_rows <- which(ppg()$parentNameUsageID == taxon_id)
+
+            if (length(child_rows) > 0) {
+              # Clear current selection
+              DT::selectRows(dt_proxy, NULL)
+
+              # Search for taxonID in the parentNameUsageID column
+              col_index <- which(names(ppg()) == "parentNameUsageID") - 1
               search_cols <- rep("", ncol(ppg()))
               search_cols[col_index + 1] <- taxon_id
 
