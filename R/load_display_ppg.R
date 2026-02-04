@@ -167,14 +167,18 @@ display_ppg_server <- function(id, ppg) {
     # Enable/disable jump to parent button based on selection
     observeEvent(selected_rows(), {
       if (length(selected_rows()) == 1) {
-        # Check if selected taxon has a parent
+        # With server=TRUE, selected_rows gives the index in the full dataset
         row_index <- selected_rows()
-        selected_data <- ppg()[row_index, ]
-        if (
-          !is.na(selected_data$parentNameUsageID) &&
-            selected_data$parentNameUsageID != ""
-        ) {
-          shinyjs::enable("jump_to_parent")
+        if (row_index > 0 && row_index <= nrow(ppg())) {
+          selected_data <- ppg()[row_index, ]
+          if (
+            !is.na(selected_data$parentNameUsageID) &&
+              selected_data$parentNameUsageID != ""
+          ) {
+            shinyjs::enable("jump_to_parent")
+          } else {
+            shinyjs::disable("jump_to_parent")
+          }
         } else {
           shinyjs::disable("jump_to_parent")
         }
@@ -187,30 +191,33 @@ display_ppg_server <- function(id, ppg) {
     observeEvent(input$jump_to_parent, {
       if (length(selected_rows()) == 1) {
         row_index <- selected_rows()
-        selected_data <- ppg()[row_index, ]
-        parent_id <- selected_data$parentNameUsageID
+        if (row_index > 0 && row_index <= nrow(ppg())) {
+          selected_data <- ppg()[row_index, ]
+          parent_id <- selected_data$parentNameUsageID
 
-        if (!is.na(parent_id) && parent_id != "") {
-          # Find parent row in the data
-          parent_row <- which(ppg()$taxonID == parent_id)
+          if (!is.na(parent_id) && parent_id != "") {
+            # Find parent row in the data
+            parent_row <- which(ppg()$taxonID == parent_id)
 
-          if (length(parent_row) > 0) {
-            # Clear current selection
-            DT::selectRows(dt_proxy, NULL)
+            if (length(parent_row) > 0) {
+              # Clear current selection
+              DT::selectRows(dt_proxy, NULL)
 
-            # Search for exact taxonID in the taxonID column (column 0)
-            # This ensures only one row matches
-            col_index <- which(names(ppg()) == "taxonID") - 1
-            search_cols <- rep("", ncol(ppg()))
-            search_cols[col_index + 1] <- parent_id
+              # Search for exact taxonID in the taxonID column (column 0)
+              # This ensures only one row matches
+              col_index <- which(names(ppg()) == "taxonID") - 1
+              search_cols <- rep("", ncol(ppg()))
+              search_cols[col_index + 1] <- parent_id
 
-            DT::updateSearch(
-              dt_proxy,
-              keywords = list(global = "", columns = search_cols)
-            )
+              DT::updateSearch(
+                dt_proxy,
+                keywords = list(global = "", columns = search_cols)
+              )
 
-            # Select the parent row (should be row 1 after filtering)
-            DT::selectRows(dt_proxy, 1)
+              # Select the parent row
+              # After filtering, need to select by the parent's actual row index
+              DT::selectRows(dt_proxy, parent_row)
+            }
           }
         }
       }
