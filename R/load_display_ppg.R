@@ -13,6 +13,7 @@ display_ppg_ui <- function(id) {
     actionButton(NS(id, "select_all"), "Select All"),
     actionButton(NS(id, "select_none"), "Select None"),
     actionButton(NS(id, "jump_to_parent"), "Jump to parent"),
+    actionButton(NS(id, "jump_to_accepted"), "Jump to accepted"),
     actionButton(NS(id, "clear_search"), "Clear search"),
     actionButton(NS(id, "toggle_columns"), "Show higher taxa"),
     textOutput(NS(id, "selected_rows_message"))
@@ -50,8 +51,9 @@ display_ppg_server <- function(id, ppg) {
   column_visibility <- reactiveVal(FALSE)
 
   moduleServer(id, function(input, output, session) {
-    # Disable jump to parent button initially
+    # Disable jump buttons initially
     shinyjs::disable("jump_to_parent")
+    shinyjs::disable("jump_to_accepted")
 
     # Set up PPG table
     render_table <- function() {
@@ -164,13 +166,15 @@ display_ppg_server <- function(id, ppg) {
       input$ppg_table_rows_selected
     )
 
-    # Enable/disable jump to parent button based on selection
+    # Enable/disable jump buttons based on selection
     observeEvent(selected_rows(), {
       if (length(selected_rows()) == 1) {
         # With server=TRUE, selected_rows gives the index in the full dataset
         row_index <- selected_rows()
         if (row_index > 0 && row_index <= nrow(ppg())) {
           selected_data <- ppg()[row_index, ]
+
+          # Enable jump to parent if taxon has a parent
           if (
             !is.na(selected_data$parentNameUsageID) &&
               selected_data$parentNameUsageID != ""
@@ -179,11 +183,24 @@ display_ppg_server <- function(id, ppg) {
           } else {
             shinyjs::disable("jump_to_parent")
           }
+
+          # Enable jump to accepted if taxon is a synonym
+          if (
+            !is.na(selected_data$acceptedNameUsageID) &&
+              selected_data$acceptedNameUsageID != "" &&
+              selected_data$taxonomicStatus != "accepted"
+          ) {
+            shinyjs::enable("jump_to_accepted")
+          } else {
+            shinyjs::disable("jump_to_accepted")
+          }
         } else {
           shinyjs::disable("jump_to_parent")
+          shinyjs::disable("jump_to_accepted")
         }
       } else {
         shinyjs::disable("jump_to_parent")
+        shinyjs::disable("jump_to_accepted")
       }
     })
 
@@ -217,6 +234,40 @@ display_ppg_server <- function(id, ppg) {
               # Select the parent row
               # After filtering, need to select by the parent's actual row index
               DT::selectRows(dt_proxy, parent_row)
+            }
+          }
+        }
+      }
+    })
+
+    # Jump to accepted taxon
+    observeEvent(input$jump_to_accepted, {
+      if (length(selected_rows()) == 1) {
+        row_index <- selected_rows()
+        if (row_index > 0 && row_index <= nrow(ppg())) {
+          selected_data <- ppg()[row_index, ]
+          accepted_id <- selected_data$acceptedNameUsageID
+
+          if (!is.na(accepted_id) && accepted_id != "") {
+            # Find accepted name row in the data
+            accepted_row <- which(ppg()$taxonID == accepted_id)
+
+            if (length(accepted_row) > 0) {
+              # Clear current selection
+              DT::selectRows(dt_proxy, NULL)
+
+              # Search for exact taxonID in the taxonID column
+              col_index <- which(names(ppg()) == "taxonID") - 1
+              search_cols <- rep("", ncol(ppg()))
+              search_cols[col_index + 1] <- accepted_id
+
+              DT::updateSearch(
+                dt_proxy,
+                keywords = list(global = "", columns = search_cols)
+              )
+
+              # Select the accepted name row
+              DT::selectRows(dt_proxy, accepted_row)
             }
           }
         }
