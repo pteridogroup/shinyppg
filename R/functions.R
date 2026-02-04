@@ -48,9 +48,23 @@ add_higher_taxonomy <- function(ppg) {
     ppg[[rank]] <- NA_character_
   }
 
+  # Create a lookup table for faster parent lookups
+  taxon_lookup <- setNames(
+    seq_len(nrow(ppg)),
+    ppg$taxonID
+  )
+
+  # Set up progress bar
+  n_rows <- nrow(ppg)
+  pb <- txtProgressBar(min = 0, max = n_rows, style = 3)
+
   # For each row, traverse up the hierarchy and fill in higher ranks
-  for (i in seq_len(nrow(ppg))) {
-    current_id <- ppg$taxonID[i]
+  for (i in seq_len(n_rows)) {
+    # Update progress bar every 100 rows
+    if (i %% 100 == 0) {
+      setTxtProgressBar(pb, i)
+    }
+
     current_rank <- ppg$taxonRank[i]
 
     # Fill in current rank if it's one of the target ranks
@@ -58,11 +72,15 @@ add_higher_taxonomy <- function(ppg) {
       ppg[[current_rank]][i] <- ppg$scientificName[i]
     }
 
-    # Traverse up the hierarchy
+    # Traverse up the hierarchy using lookup table
     parent_id <- ppg$parentNameUsageID[i]
-    while (!is.na(parent_id) && parent_id != "") {
-      parent_row <- which(ppg$taxonID == parent_id)
-      if (length(parent_row) == 0) {
+    visited <- character(0) # Track visited IDs to prevent infinite loops
+
+    while (!is.na(parent_id) && parent_id != "" && !(parent_id %in% visited)) {
+      visited <- c(visited, parent_id)
+      parent_row <- taxon_lookup[[parent_id]]
+
+      if (is.null(parent_row)) {
         break
       }
 
@@ -75,6 +93,11 @@ add_higher_taxonomy <- function(ppg) {
     }
   }
 
+  # Close progress bar
+  setTxtProgressBar(pb, n_rows)
+  close(pb)
+  cat("\n")
+
   return(ppg)
 }
 
@@ -85,13 +108,17 @@ add_higher_taxonomy <- function(ppg) {
 #' Internal function
 #'
 #' @param data_source Where to get the data. If 'local', data will be read
-#' from saved data file in ./data. Otherwise, data will be downloaded.
+#' from saved data file in ./data (ppg_small for testing). If 'full', the
+#' full production dataset will be loaded from ppg_full.rda. Otherwise, data
+#' will be downloaded from the repository and processed on-the-fly.
 #'
 #' @return Tibble
 #' @noRd
 load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
   if (data_source == "local") {
     ppg <- shinyppg::ppg_small
+  } else if (data_source == "full") {
+    ppg <- shinyppg::ppg_full
   } else if (data_source == "repo") {
     path <- "https://raw.githubusercontent.com/pteridogroup/ppg/refs/heads/main/data/ppg.csv"
     ppg <- readr::read_csv(
@@ -103,27 +130,27 @@ load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
     # Remove obsolete columns if they exist (for backward compatibility)
     obsolete_cols <- c("ipniURL", "modifiedBy", "modifiedByID")
     ppg <- ppg[, !names(ppg) %in% obsolete_cols, drop = FALSE]
+
+    # Generate acceptedNameUsage and parentNameUsage columns
+    ppg <- ppg |>
+      dwctaxon::dct_fill_col(
+        fill_to = "acceptedNameUsage",
+        fill_from = "scientificName",
+        match_to = "taxonID",
+        match_from = "acceptedNameUsageID",
+        stamp_modified = FALSE
+      ) |>
+      dwctaxon::dct_fill_col(
+        fill_to = "parentNameUsage",
+        fill_from = "scientificName",
+        match_to = "taxonID",
+        match_from = "parentNameUsageID",
+        stamp_modified = FALSE
+      )
+
+    # Add higher taxonomy columns
+    ppg <- add_higher_taxonomy(ppg)
   }
-
-  # Generate acceptedNameUsage and parentNameUsage columns
-  ppg <- ppg |>
-    dwctaxon::dct_fill_col(
-      fill_to = "acceptedNameUsage",
-      fill_from = "scientificName",
-      match_to = "taxonID",
-      match_from = "acceptedNameUsageID",
-      stamp_modified = FALSE
-    ) |>
-    dwctaxon::dct_fill_col(
-      fill_to = "parentNameUsage",
-      fill_from = "scientificName",
-      match_to = "taxonID",
-      match_from = "parentNameUsageID",
-      stamp_modified = FALSE
-    )
-
-  # Add higher taxonomy columns
-  ppg <- add_higher_taxonomy(ppg)
 
   return(ppg)
 }
