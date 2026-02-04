@@ -12,6 +12,7 @@ display_ppg_ui <- function(id) {
     DT::dataTableOutput(NS(id, "ppg_table"), width = "100%"),
     actionButton(NS(id, "select_all"), "Select All"),
     actionButton(NS(id, "select_none"), "Select None"),
+    actionButton(NS(id, "jump_to_parent"), "Jump to parent"),
     actionButton(NS(id, "toggle_columns"), "Show higher taxa"),
     textOutput(NS(id, "selected_rows_message"))
   )
@@ -48,6 +49,9 @@ display_ppg_server <- function(id, ppg) {
   column_visibility <- reactiveVal(FALSE)
 
   moduleServer(id, function(input, output, session) {
+    # Disable jump to parent button initially
+    shinyjs::disable("jump_to_parent")
+
     # Set up PPG table
     render_table <- function() {
       DT::renderDataTable(
@@ -136,10 +140,63 @@ display_ppg_server <- function(id, ppg) {
       }
     })
 
-    # Display number of selected rows
+    # Display number of selected rows and enable/disable jump to parent button
     selected_rows <- reactive(
       input$ppg_table_rows_selected
     )
+
+    # Enable/disable jump to parent button based on selection
+    observeEvent(selected_rows(), {
+      if (length(selected_rows()) == 1) {
+        # Check if selected taxon has a parent
+        row_index <- selected_rows()
+        selected_data <- ppg()[row_index, ]
+        if (
+          !is.na(selected_data$parentNameUsageID) &&
+            selected_data$parentNameUsageID != ""
+        ) {
+          shinyjs::enable("jump_to_parent")
+        } else {
+          shinyjs::disable("jump_to_parent")
+        }
+      } else {
+        shinyjs::disable("jump_to_parent")
+      }
+    })
+
+    # Jump to parent taxon
+    observeEvent(input$jump_to_parent, {
+      if (length(selected_rows()) == 1) {
+        row_index <- selected_rows()
+        selected_data <- ppg()[row_index, ]
+        parent_id <- selected_data$parentNameUsageID
+
+        if (!is.na(parent_id) && parent_id != "") {
+          # Find parent row in the data
+          parent_row <- which(ppg()$taxonID == parent_id)
+
+          if (length(parent_row) > 0) {
+            # Clear current selection
+            DT::selectRows(dt_proxy, NULL)
+
+            # Search for exact taxonID in the taxonID column (column 0)
+            # This ensures only one row matches
+            col_index <- which(names(ppg()) == "taxonID") - 1
+            search_cols <- rep("", ncol(ppg()))
+            search_cols[col_index + 1] <- parent_id
+
+            DT::updateSearch(
+              dt_proxy,
+              keywords = list(global = "", columns = search_cols)
+            )
+
+            # Select the parent row (should be row 1 after filtering)
+            DT::selectRows(dt_proxy, 1)
+          }
+        }
+      }
+    })
+
     output$selected_rows_message <- renderText({
       num_selected <- length(selected_rows())
       paste("Number of rows selected:", num_selected)
