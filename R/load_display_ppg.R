@@ -78,18 +78,6 @@ display_ppg_server <- function(id, ppg) {
                     select_sort_col(ppg(), "parentNameUsageID")
                   ),
                   visible = FALSE
-                ),
-                list(
-                  targets = c(
-                    select_sort_col(ppg(), "class"),
-                    select_sort_col(ppg(), "subclass"),
-                    select_sort_col(ppg(), "order"),
-                    select_sort_col(ppg(), "suborder"),
-                    select_sort_col(ppg(), "family"),
-                    select_sort_col(ppg(), "subfamily"),
-                    select_sort_col(ppg(), "genus")
-                  ),
-                  visible = column_visibility()
                 )
               )
             )
@@ -104,6 +92,27 @@ display_ppg_server <- function(id, ppg) {
 
     # Set up proxy for handling row selection
     dt_proxy <- DT::dataTableProxy("ppg_table")
+
+    # Hide higher taxa columns initially
+    observeEvent(
+      input$ppg_table_search,
+      {
+        if (!column_visibility()) {
+          higher_taxa_cols <- c(
+            which(names(ppg()) == "class") - 1,
+            which(names(ppg()) == "subclass") - 1,
+            which(names(ppg()) == "order") - 1,
+            which(names(ppg()) == "suborder") - 1,
+            which(names(ppg()) == "family") - 1,
+            which(names(ppg()) == "subfamily") - 1,
+            which(names(ppg()) == "genus") - 1
+          )
+          DT::hideCols(dt_proxy, higher_taxa_cols)
+        }
+      },
+      once = TRUE,
+      ignoreInit = FALSE
+    )
 
     # Select / deselect rows
     observeEvent(
@@ -123,14 +132,23 @@ display_ppg_server <- function(id, ppg) {
       current_visibility <- column_visibility()
       column_visibility(!current_visibility)
 
-      # Redraw the datatable with updated visibility
-      output$ppg_table <- render_table()
-      DT::replaceData(
-        dt_proxy,
-        ppg(),
-        resetPaging = FALSE,
-        rownames = FALSE
+      # Get column indices for higher taxa
+      higher_taxa_cols <- c(
+        which(names(ppg()) == "class") - 1,
+        which(names(ppg()) == "subclass") - 1,
+        which(names(ppg()) == "order") - 1,
+        which(names(ppg()) == "suborder") - 1,
+        which(names(ppg()) == "family") - 1,
+        which(names(ppg()) == "subfamily") - 1,
+        which(names(ppg()) == "genus") - 1
       )
+
+      # Show or hide columns without resetting search
+      if (column_visibility()) {
+        DT::showCols(dt_proxy, higher_taxa_cols)
+      } else {
+        DT::hideCols(dt_proxy, higher_taxa_cols)
+      }
 
       # Toggle appearance of button
       if (isTRUE(input$toggle_columns %% 2 == 1)) {
