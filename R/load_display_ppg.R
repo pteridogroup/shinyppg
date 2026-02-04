@@ -8,10 +8,11 @@
 #' @noRd
 display_ppg_ui <- function(id) {
   tagList(
+    shinyjs::useShinyjs(),
     DT::dataTableOutput(NS(id, "ppg_table"), width = "100%"),
     actionButton(NS(id, "select_all"), "Select All"),
     actionButton(NS(id, "select_none"), "Select None"),
-    actionButton(NS(id, "toggle_columns"), "Show advanced columns"),
+    actionButton(NS(id, "toggle_columns"), "Show higher taxa"),
     textOutput(NS(id, "selected_rows_message"))
   )
 }
@@ -70,7 +71,12 @@ display_ppg_server <- function(id, ppg) {
                   targets = c(
                     select_sort_col(ppg(), "taxonID"),
                     select_sort_col(ppg(), "acceptedNameUsageID"),
-                    select_sort_col(ppg(), "parentNameUsageID"),
+                    select_sort_col(ppg(), "parentNameUsageID")
+                  ),
+                  visible = FALSE
+                ),
+                list(
+                  targets = c(
                     select_sort_col(ppg(), "class"),
                     select_sort_col(ppg(), "subclass"),
                     select_sort_col(ppg(), "order"),
@@ -108,7 +114,7 @@ display_ppg_server <- function(id, ppg) {
       DT::selectRows(dt_proxy, NULL)
     )
 
-    # Show / hide ID coluns
+    # Show / hide higher taxa columns
     observeEvent(input$toggle_columns, {
       current_visibility <- column_visibility()
       column_visibility(!current_visibility)
@@ -124,9 +130,9 @@ display_ppg_server <- function(id, ppg) {
 
       # Toggle appearance of button
       if (isTRUE(input$toggle_columns %% 2 == 1)) {
-        shinyjs::html("toggle_columns", "Hide advanced columns")
+        shinyjs::html("toggle_columns", "Hide higher taxa")
       } else {
-        shinyjs::html("toggle_columns", "Show advanced columns")
+        shinyjs::html("toggle_columns", "Show higher taxa")
       }
     })
 
