@@ -10,7 +10,6 @@ display_ppg_ui <- function(id) {
   tagList(
     shinyjs::useShinyjs(),
     DT::dataTableOutput(NS(id, "ppg_table"), width = "100%"),
-    actionButton(NS(id, "select_all"), "Select All"),
     actionButton(NS(id, "select_none"), "Select None"),
     actionButton(NS(id, "jump_to_parent"), "Jump to parent"),
     actionButton(NS(id, "jump_to_accepted"), "Jump to accepted"),
@@ -67,7 +66,7 @@ display_ppg_server <- function(id, ppg) {
             data = ppg(),
             rownames = FALSE,
             filter = "top",
-            selection = "multiple",
+            selection = "single",
             escape = FALSE,
             options = list(
               order = list(
@@ -121,14 +120,7 @@ display_ppg_server <- function(id, ppg) {
       ignoreInit = FALSE
     )
 
-    # Select / deselect rows
-    observeEvent(
-      input$select_all,
-      DT::selectRows(
-        dt_proxy,
-        unique(c(input$ppg_table_rows_all, input$ppg_table_rows_selected))
-      )
-    )
+    # Deselect rows
     observeEvent(
       input$select_none,
       DT::selectRows(dt_proxy, NULL)
