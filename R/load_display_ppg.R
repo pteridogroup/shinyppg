@@ -14,6 +14,7 @@ display_ppg_ui <- function(id) {
     actionButton(NS(id, "select_none"), "Select None"),
     actionButton(NS(id, "jump_to_parent"), "Jump to parent"),
     actionButton(NS(id, "jump_to_accepted"), "Jump to accepted"),
+    actionButton(NS(id, "show_synonyms"), "Show synonyms"),
     actionButton(NS(id, "clear_search"), "Clear search"),
     actionButton(NS(id, "toggle_columns"), "Show higher taxa"),
     textOutput(NS(id, "selected_rows_message"))
@@ -54,6 +55,7 @@ display_ppg_server <- function(id, ppg) {
     # Disable jump buttons initially
     shinyjs::disable("jump_to_parent")
     shinyjs::disable("jump_to_accepted")
+    shinyjs::disable("show_synonyms")
 
     # Set up PPG table
     render_table <- function() {
@@ -194,13 +196,32 @@ display_ppg_server <- function(id, ppg) {
           } else {
             shinyjs::disable("jump_to_accepted")
           }
+
+          # Enable show synonyms if taxon is an accepted name AND has synonyms
+          if (selected_data$taxonomicStatus == "accepted") {
+            # Check if this taxon has any synonyms
+            taxon_id <- selected_data$taxonID
+            has_synonyms <- any(
+              ppg()$acceptedNameUsageID == taxon_id,
+              na.rm = TRUE
+            )
+            if (has_synonyms) {
+              shinyjs::enable("show_synonyms")
+            } else {
+              shinyjs::disable("show_synonyms")
+            }
+          } else {
+            shinyjs::disable("show_synonyms")
+          }
         } else {
           shinyjs::disable("jump_to_parent")
           shinyjs::disable("jump_to_accepted")
+          shinyjs::disable("show_synonyms")
         }
       } else {
         shinyjs::disable("jump_to_parent")
         shinyjs::disable("jump_to_accepted")
+        shinyjs::disable("show_synonyms")
       }
     })
 
@@ -268,6 +289,37 @@ display_ppg_server <- function(id, ppg) {
 
               # Select the accepted name row
               DT::selectRows(dt_proxy, accepted_row)
+            }
+          }
+        }
+      }
+    })
+
+    # Show all synonyms of selected accepted name
+    observeEvent(input$show_synonyms, {
+      if (length(selected_rows()) == 1) {
+        row_index <- selected_rows()
+        if (row_index > 0 && row_index <= nrow(ppg())) {
+          selected_data <- ppg()[row_index, ]
+          taxon_id <- selected_data$taxonID
+
+          if (!is.na(taxon_id) && taxon_id != "") {
+            # Find all rows where acceptedNameUsageID matches this taxon
+            synonym_rows <- which(ppg()$acceptedNameUsageID == taxon_id)
+
+            if (length(synonym_rows) > 0) {
+              # Clear current selection
+              DT::selectRows(dt_proxy, NULL)
+
+              # Search for taxonID in the acceptedNameUsageID column
+              col_index <- which(names(ppg()) == "acceptedNameUsageID") - 1
+              search_cols <- rep("", ncol(ppg()))
+              search_cols[col_index + 1] <- taxon_id
+
+              DT::updateSearch(
+                dt_proxy,
+                keywords = list(global = "", columns = search_cols)
+              )
             }
           }
         }
