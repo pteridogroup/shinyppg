@@ -39,36 +39,21 @@ ppg_app <- function(data_source = "local") {
 
     # Load PPG data
     ppg <- reactiveVal(load_data(data_source))
-    ppg_remaining <- reactiveVal(data.frame())
 
     # Specify UI
     output$main_content <- shiny::renderUI({
-      sidebarLayout(
-        sidebarPanel(
-          h3("Browse Data"),
-          subset_ui("subset"),
-          hr(),
-          h4("User Guide"),
-          p("Use the filters above to browse different taxonomic groups."),
-          p("Select rows in the table to view details.")
-        ),
-        mainPanel(
+      fluidRow(
+        column(
+          width = 12,
           h3("PPG Taxonomic Database"),
+          p("Use the column filters below to browse by taxonomic group."),
           display_ppg_ui("display_ppg")
         )
       )
     })
 
-    # Other server logic
-
-    # - initial ppg table display
+    # Display ppg table
     rows_selected <- display_ppg_server("display_ppg", ppg)
-    # - subset data
-    subset_server(
-      id = "subset",
-      ppg = ppg,
-      ppg_remaining = ppg_remaining
-    )
   }
 
   shiny::shinyApp(ui, server)

@@ -60,14 +60,24 @@ display_ppg_server <- function(id, ppg) {
             options = list(
               order = list(
                 list(select_sort_col(ppg(), "modified"), "desc"),
-                list(select_sort_col(ppg(), "scientificName"), "asc")
+                list(
+                  select_sort_col(ppg(), "scientificName"),
+                  "asc"
+                )
               ),
               columnDefs = list(
                 list(
                   targets = c(
                     select_sort_col(ppg(), "taxonID"),
                     select_sort_col(ppg(), "acceptedNameUsageID"),
-                    select_sort_col(ppg(), "parentNameUsageID")
+                    select_sort_col(ppg(), "parentNameUsageID"),
+                    select_sort_col(ppg(), "class"),
+                    select_sort_col(ppg(), "subclass"),
+                    select_sort_col(ppg(), "order"),
+                    select_sort_col(ppg(), "suborder"),
+                    select_sort_col(ppg(), "family"),
+                    select_sort_col(ppg(), "subfamily"),
+                    select_sort_col(ppg(), "genus")
                   ),
                   visible = column_visibility()
                 )
@@ -105,7 +115,12 @@ display_ppg_server <- function(id, ppg) {
 
       # Redraw the datatable with updated visibility
       output$ppg_table <- render_table()
-      DT::replaceData(dt_proxy, ppg(), resetPaging = FALSE, rownames = FALSE)
+      DT::replaceData(
+        dt_proxy,
+        ppg(),
+        resetPaging = FALSE,
+        rownames = FALSE
+      )
 
       # Toggle appearance of button
       if (isTRUE(input$toggle_columns %% 2 == 1)) {

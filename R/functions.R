@@ -20,37 +20,91 @@ set_asc_desc <- function(col_list) {
   res
 }
 
+#' Add higher taxonomy columns
+#'
+#' Add columns for each higher taxonomic rank to enable filtering without
+#' subsetting data
+#'
+#' Internal function
+#'
+#' @param ppg PPG dataframe
+#' @return PPG with additional columns for higher taxonomy
+#' @noRd
+#' @autoglobal
+add_higher_taxonomy <- function(ppg) {
+  # Define target ranks in hierarchical order
+  target_ranks <- c(
+    "class",
+    "subclass",
+    "order",
+    "suborder",
+    "family",
+    "subfamily",
+    "genus"
+  )
+
+  # Initialize columns with NA
+  for (rank in target_ranks) {
+    ppg[[rank]] <- NA_character_
+  }
+
+  # For each row, traverse up the hierarchy and fill in higher ranks
+  for (i in seq_len(nrow(ppg))) {
+    current_id <- ppg$taxonID[i]
+    current_rank <- ppg$taxonRank[i]
+
+    # Fill in current rank if it's one of the target ranks
+    if (current_rank %in% target_ranks) {
+      ppg[[current_rank]][i] <- ppg$scientificName[i]
+    }
+
+    # Traverse up the hierarchy
+    parent_id <- ppg$parentNameUsageID[i]
+    while (!is.na(parent_id) && parent_id != "") {
+      parent_row <- which(ppg$taxonID == parent_id)
+      if (length(parent_row) == 0) {
+        break
+      }
+
+      parent_rank <- ppg$taxonRank[parent_row]
+      if (parent_rank %in% target_ranks) {
+        ppg[[parent_rank]][i] <- ppg$scientificName[parent_row]
+      }
+
+      parent_id <- ppg$parentNameUsageID[parent_row]
+    }
+  }
+
+  return(ppg)
+}
+
 #' Load data
 #'
 #' Loads the most recent PPG dataset
 #'
 #' Internal function
 #'
-#' @param data_source Where to get the data. If 'local', data will be read from
-#' saved data file in ./data. Otherwise, data will be downloaded.
+#' @param data_source Where to get the data. If 'local', data will be read
+#' from saved data file in ./data. Otherwise, data will be downloaded.
 #'
 #' @return Tibble
 #' @noRd
 load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
   if (data_source == "local") {
-    return(shinyppg::ppg_small)
+    ppg <- shinyppg::ppg_small
   } else if (data_source == "repo") {
-    if (!fs::dir_exists("/home/shiny/ppg")) {
-      setup_repo("/home/shiny/ppg")
-    } # TODO: fetch and fast-forward main if repo already exists
-    path <- "/home/shiny/ppg/data/ppg.csv"
-  } else {
     path <- "https://raw.githubusercontent.com/pteridogroup/ppg/refs/heads/main/data/ppg.csv"
+    ppg <- readr::read_csv(
+      path,
+      col_types = readr::cols(.default = readr::col_character())
+    ) |>
+      as.data.frame()
+    attributes(ppg)$spec <- NULL
+    # Remove obsolete columns if they exist (for backward compatibility)
+    obsolete_cols <- c("ipniURL", "modifiedBy", "modifiedByID")
+    ppg <- ppg[, !names(ppg) %in% obsolete_cols, drop = FALSE]
   }
-  ppg <- readr::read_csv(
-    path,
-    col_types = readr::cols(.default = readr::col_character())
-  ) |>
-    as.data.frame()
-  attributes(ppg)$spec <- NULL
-  # Remove obsolete columns if they exist (for backward compatibility)
-  obsolete_cols <- c("ipniURL", "modifiedBy", "modifiedByID")
-  ppg <- ppg[, !names(ppg) %in% obsolete_cols, drop = FALSE]
+
   # Generate acceptedNameUsage and parentNameUsage columns
   ppg <- ppg |>
     dwctaxon::dct_fill_col(
@@ -67,6 +121,10 @@ load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
       match_from = "parentNameUsageID",
       stamp_modified = FALSE
     )
+
+  # Add higher taxonomy columns
+  ppg <- add_higher_taxonomy(ppg)
+
   return(ppg)
 }
 

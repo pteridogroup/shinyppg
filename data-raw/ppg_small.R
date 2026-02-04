@@ -69,6 +69,8 @@ ppg_small <-
     modified = as.character(modified)
   ) |>
   select(-created) |>
+  # Add higher taxonomy columns
+  add_higher_taxonomy() |>
   # should pass using the same checks as the full dataset
   dwctaxon::dct_validate(
     valid_tax_status = "variant, accepted, synonym, ambiguous synonym",

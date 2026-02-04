@@ -31,31 +31,32 @@ subset_ui <- function(id) {
   )
 }
 
-#' Server logic to subset PPG to a set of taxonomic groups
+#' Server logic to filter PPG by taxonomic groups
 #'
 #' Internal function
 #'
 #' @import shiny
 #' @param id Character vector of length 1; the ID for this module.
 #' @param ppg Reactive dataframe (tibble) of PPG data
-#' @param ppg_remaining Reactive dataframe (tibble) of PPG data; data that was
-#'   *not* selected for subsetting previously.
-#' @returns Server logic
+#' @returns Reactive list of filter criteria
 #' @autoglobal
 #' @noRd
-subset_server <- function(
-  id,
-  ppg,
-  ppg_remaining
-) {
+subset_server <- function(id, ppg) {
   # Check args
   stopifnot(is.reactive(ppg))
-  stopifnot(is.reactive(ppg_remaining))
 
   moduleServer(id, function(input, output, session) {
-    # Initial state: not subset, so disable reset button
-    is_subset <- reactiveVal(FALSE)
+    # Reactive to store filter state
+    filter_criteria <- reactiveVal(list(
+      order = NULL,
+      family = NULL,
+      genus = NULL
+    ))
+
+    # Initial state: not filtered
+    is_filtered <- reactiveVal(FALSE)
     shinyjs::disable("reset")
+
     order_select <- autocomplete_server(
       id = "order",
       ppg = ppg,
@@ -63,7 +64,7 @@ subset_server <- function(
       placeholder = "Select order",
       col_select = NULL,
       fill_name = FALSE,
-      switch_off = is_subset,
+      switch_off = is_filtered,
       taxonRank == "order"
     )
     family_select <- autocomplete_server(
@@ -73,7 +74,7 @@ subset_server <- function(
       placeholder = "Select family",
       col_select = NULL,
       fill_name = FALSE,
-      switch_off = is_subset,
+      switch_off = is_filtered,
       taxonRank == "family"
     )
     genus_select <- autocomplete_server(
@@ -83,44 +84,39 @@ subset_server <- function(
       placeholder = "Select genus",
       col_select = NULL,
       fill_name = FALSE,
-      switch_off = is_subset,
+      switch_off = is_filtered,
       taxonRank == "genus"
     )
-    # Subset taxa
+
+    # Set filter criteria
     observeEvent(input$subset, {
-      taxa_selected <- unique(
-        c(order_select(), family_select(), genus_select())
+      taxa_selected <- list(
+        order = order_select(),
+        family = family_select(),
+        genus = genus_select()
       )
-      if (length(taxa_selected) > 0 && !is_subset()) {
-        subsetted <- subset_to_taxon(ppg(), taxa_selected) |>
-          dplyr::arrange(scientificName)
-        other <- ppg() |>
-          dplyr::anti_join(subsetted, by = "taxonID") |>
-          # to account for multiple presses of the subset button
-          dplyr::bind_rows(ppg_remaining()) |>
-          unique()
-        # reset patch list
-        set_global("global_patch_list", NULL)
-        ppg(subsetted)
-        ppg_remaining(other)
+      # Check if any filter is applied
+      has_filter <- any(lengths(taxa_selected) > 0)
+
+      if (has_filter && !is_filtered()) {
+        filter_criteria(taxa_selected)
         shinyjs::disable("subset")
         shinyjs::enable("reset")
-        is_subset(TRUE)
+        is_filtered(TRUE)
       }
     })
+
+    # Reset filter
     observeEvent(input$reset, {
-      if (nrow(ppg_remaining()) > 0 && is_subset()) {
-        full <- dplyr::bind_rows(ppg(), ppg_remaining()) |>
-          unique() |>
-          dplyr::arrange(scientificName)
-        # reset patch list
-        set_global("global_patch_list", NULL)
-        ppg(full)
+      if (is_filtered()) {
+        filter_criteria(list(order = NULL, family = NULL, genus = NULL))
         shinyjs::enable("subset")
         shinyjs::disable("reset")
-        is_subset(FALSE)
+        is_filtered(FALSE)
       }
     })
+
+    return(filter_criteria)
   })
 }
 
@@ -138,15 +134,13 @@ subset_app <- function() {
   server <- function(input, output, session) {
     # Load data
     ppg <- load_data_server("ppg")
-    credentials <- reactive(list(user_auth = TRUE))
-    ppg_remaining <- reactiveVal(data.frame())
-    # Other server logic
-    rows_selected <- display_ppg_server("display_ppg", ppg)
-    subset_server(
-      id = "subset",
-      ppg = ppg,
-      ppg_remaining = ppg_remaining,
-      credentials = credentials
+    # Get filter criteria from subset module
+    filter_criteria <- subset_server(id = "subset", ppg = ppg)
+    # Display filtered data
+    rows_selected <- display_ppg_server(
+      "display_ppg",
+      ppg,
+      filter_criteria = filter_criteria
     )
   }
   shinyApp(ui, server)
