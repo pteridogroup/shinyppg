@@ -13,6 +13,7 @@ display_ppg_ui <- function(id) {
     actionButton(NS(id, "select_all"), "Select All"),
     actionButton(NS(id, "select_none"), "Select None"),
     actionButton(NS(id, "jump_to_parent"), "Jump to parent"),
+    actionButton(NS(id, "clear_search"), "Clear search"),
     actionButton(NS(id, "toggle_columns"), "Show higher taxa"),
     textOutput(NS(id, "selected_rows_message"))
   )
@@ -213,6 +214,20 @@ display_ppg_server <- function(id, ppg) {
           }
         }
       }
+    })
+
+    # Clear all search filters
+    observeEvent(input$clear_search, {
+      # Clear global search and all column searches
+      DT::updateSearch(
+        dt_proxy,
+        keywords = list(
+          global = "",
+          columns = rep("", ncol(ppg()))
+        )
+      )
+      # Clear selection
+      DT::selectRows(dt_proxy, NULL)
     })
 
     output$selected_rows_message <- renderText({
