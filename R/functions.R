@@ -98,6 +98,38 @@ add_higher_taxonomy <- function(ppg) {
   close(pb)
   cat("\n")
 
+  # Fill in higher taxonomy for synonyms based on their accepted names
+  cat("Filling higher taxonomy for synonyms...\n")
+  pb <- txtProgressBar(min = 0, max = n_rows, style = 3)
+
+  for (i in seq_len(n_rows)) {
+    # Update progress bar every 100 rows
+    if (i %% 100 == 0) {
+      setTxtProgressBar(pb, i)
+    }
+
+    accepted_id <- ppg$acceptedNameUsageID[i]
+
+    # If this is a synonym (has an acceptedNameUsageID different from taxonID)
+    if (
+      !is.na(accepted_id) && accepted_id != "" && accepted_id != ppg$taxonID[i]
+    ) {
+      accepted_row <- taxon_lookup[[accepted_id]]
+
+      if (!is.null(accepted_row)) {
+        # Copy all higher taxonomy columns from accepted name
+        for (rank in target_ranks) {
+          ppg[[rank]][i] <- ppg[[rank]][accepted_row]
+        }
+      }
+    }
+  }
+
+  # Close progress bar
+  setTxtProgressBar(pb, n_rows)
+  close(pb)
+  cat("\n")
+
   return(ppg)
 }
 
@@ -119,7 +151,9 @@ load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
     ppg <- shinyppg::ppg_small
   } else if (data_source == "full") {
     ppg <- shinyppg::ppg_full
-  } else if (data_source == "repo") {
+  } else {
+    # Default to downloading from repo for any other value
+    # (including "repo", "download", or empty string)
     path <- "https://raw.githubusercontent.com/pteridogroup/ppg/refs/heads/main/data/ppg.csv"
     ppg <- readr::read_csv(
       path,

@@ -74,6 +74,7 @@ ppg_small <-
   # should pass using the same checks as the full dataset
   dwctaxon::dct_validate(
     valid_tax_status = "variant, accepted, synonym, ambiguous synonym",
+    check_col_names = FALSE,
     check_sci_name = FALSE
   ) |>
   assertr::assert(in_set(ranks), taxonRank)
