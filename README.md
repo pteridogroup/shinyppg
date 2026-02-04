@@ -30,6 +30,19 @@ More details to come...
 
 ## Development
 
+### Updating the PPG Version
+
+To update to a new PPG release version:
+
+1. Edit `data-raw/ppg_version.R` and change the version string to the
+new version number (e.g., "0.0.0.9003")
+2. Run `Rscript data-raw/ppg_version.R` to save the version data object
+3. Run `Rscript data-raw/ppg_full.R` to download and process the new
+version
+4. The app heading will automatically display the updated version
+
+### Docker Development Environment
+
 To develop the app within the docker container, run:
 
 (variables `GITHUB_USER` and `GITHUB_TOKEN` must be provided for git functions to work)

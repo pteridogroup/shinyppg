@@ -1,3 +1,9 @@
+#' PPG version
+#'
+#' Version of the PPG dataset used in ppg_full
+#'
+"ppg_version"
+
 #' PPG taxonomic data
 #'
 #' PPG data for testing this app

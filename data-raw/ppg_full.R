@@ -9,19 +9,26 @@ library(readr)
 # Load package functions
 devtools::load_all()
 
+# Get PPG version from package
+ppg_version <- shinyppg::ppg_version
+
 # Download released version
 temp_zip <- tempfile(fileext = ".zip")
 temp_dir <- tempdir()
 
 download.file(
-  "https://github.com/pteridogroup/ppg/archive/refs/tags/v0.0.0.9002.zip",
+  paste0(
+    "https://github.com/pteridogroup/ppg/archive/refs/tags/v",
+    ppg_version,
+    ".zip"
+  ),
   destfile = temp_zip
 )
 
 unzip(temp_zip, exdir = temp_dir)
 
 # Read the CSV from the extracted folder
-csv_path <- file.path(temp_dir, "ppg-0.0.0.9002", "data", "ppg.csv")
+csv_path <- file.path(temp_dir, paste0("ppg-", ppg_version), "data", "ppg.csv")
 ppg_full <- readr::read_csv(
   csv_path,
   col_types = readr::cols(.default = readr::col_character())
@@ -30,7 +37,7 @@ ppg_full <- readr::read_csv(
 
 # Clean up
 unlink(temp_zip)
-unlink(file.path(temp_dir, "ppg-0.0.0.9002"), recursive = TRUE)
+unlink(file.path(temp_dir, paste0("ppg-", ppg_version)), recursive = TRUE)
 
 # Remove spec attribute
 attributes(ppg_full)$spec <- NULL

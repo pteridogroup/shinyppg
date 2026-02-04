@@ -45,7 +45,7 @@ ppg_app <- function(data_source = "local") {
       fluidRow(
         column(
           width = 12,
-          h3("PPG Taxonomic Database"),
+          h3(paste0("PPG v", shinyppg::ppg_version)),
           p("Use the column filters below to browse by taxonomic group."),
           display_ppg_ui("display_ppg")
         )
