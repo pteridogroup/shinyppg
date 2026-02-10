@@ -75,7 +75,6 @@ display_ppg_server <- function(id, ppg) {
             escape = FALSE,
             options = list(
               order = list(
-                list(select_sort_col(ppg_display(), "Modified"), "desc"),
                 list(
                   select_sort_col(ppg_display(), "Name"),
                   "asc"
