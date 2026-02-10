@@ -26,7 +26,7 @@ The app provides a viewer interface to browse and explore PPG taxonomic data. Yo
 
 The app is deployed on [shinyapps.io](https://www.shinyapps.io/).
 
-To deploy, use `rsconnect::deployApp("shinyppg_app")` (requires
+To deploy, use `rsconnect::deployApp()` (requires
 setting up an account on shinyapps.io and
 [authenticating](https://docs.rstudio.com/shinyapps.io/getting-started.html#configure-rsconnect)).
 
