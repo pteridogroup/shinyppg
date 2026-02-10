@@ -45,7 +45,3 @@ valid_tax_rank <- c(
 
 # Create environment to store data across functions (used for patch list)
 pkg_env <- new.env(parent = emptyenv())
-
-# Need this to establish dep on markdown, which is required for
-# htmltools::includeMarkdown()
-markdown_text <- markdown::mark("hello world")
