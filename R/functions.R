@@ -49,20 +49,20 @@ add_higher_taxonomy <- function(ppg) {
   }
 
   # Create a lookup table for faster parent lookups
-  taxon_lookup <- setNames(
+  taxon_lookup <- stats::setNames(
     seq_len(nrow(ppg)),
     ppg$taxonID
   )
 
   # Set up progress bar
   n_rows <- nrow(ppg)
-  pb <- txtProgressBar(min = 0, max = n_rows, style = 3)
+  pb <- utils::txtProgressBar(min = 0, max = n_rows, style = 3)
 
   # For each row, traverse up the hierarchy and fill in higher ranks
   for (i in seq_len(n_rows)) {
     # Update progress bar every 100 rows
     if (i %% 100 == 0) {
-      setTxtProgressBar(pb, i)
+      utils::setTxtProgressBar(pb, i)
     }
 
     current_rank <- ppg$taxonRank[i]
@@ -94,18 +94,18 @@ add_higher_taxonomy <- function(ppg) {
   }
 
   # Close progress bar
-  setTxtProgressBar(pb, n_rows)
+  utils::setTxtProgressBar(pb, n_rows)
   close(pb)
   cat("\n")
 
   # Fill in higher taxonomy for synonyms based on their accepted names
   cat("Filling higher taxonomy for synonyms...\n")
-  pb <- txtProgressBar(min = 0, max = n_rows, style = 3)
+  pb <- utils::txtProgressBar(min = 0, max = n_rows, style = 3)
 
   for (i in seq_len(n_rows)) {
     # Update progress bar every 100 rows
     if (i %% 100 == 0) {
-      setTxtProgressBar(pb, i)
+      utils::setTxtProgressBar(pb, i)
     }
 
     accepted_id <- ppg$acceptedNameUsageID[i]
@@ -126,7 +126,7 @@ add_higher_taxonomy <- function(ppg) {
   }
 
   # Close progress bar
-  setTxtProgressBar(pb, n_rows)
+  utils::setTxtProgressBar(pb, n_rows)
   close(pb)
   cat("\n")
 

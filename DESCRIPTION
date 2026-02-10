@@ -13,23 +13,26 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace", "rd",
     "roxyglobals::global_roclet"))
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.3
 Imports: 
     assertthat,
+    daff,
     dplyr,
     DT,
     dwctaxon (>= 2.0.3.9001),
-    fs,
     glue,
-    htmltools,
+    pkgload,
     purrr,
+    reactable,
     readr,
-    rlang,
     shiny,
     shinyjs,
+    stats,
     stringr,
+    tibble,
     tidyr,
-    tidyselect
+    tidyselect,
+    utils
 Depends: 
     R (>= 3.5)
 LazyData: true
@@ -41,4 +44,5 @@ Config/testthat/edition: 3
 Config/roxyglobals/filename: globals.R
 Config/roxyglobals/unique: FALSE
 Remotes: 
+    pteridogroup/shinyppg,
     ropensci/dwctaxon
