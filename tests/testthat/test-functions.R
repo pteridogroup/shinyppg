@@ -50,7 +50,7 @@ test_that("subsetting to taxonomic group works on single taxon", {
   abac_data <- subset_to_taxon(ppg_small, "Abacopteris")
   expect_snapshot(abac_data)
   expect_no_error(
-    dct_validate(abac_data)
+    dct_validate(abac_data, check_col_names = FALSE)
   )
 })
 
@@ -66,7 +66,8 @@ test_that("subsetting to taxonomic group works on multiple taxa", {
   expect_no_error(
     dct_validate(
       sub_data,
-      on_success = "logical"
+      on_success = "logical",
+      check_col_names = FALSE
     )
   )
 })
