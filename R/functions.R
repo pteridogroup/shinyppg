@@ -146,7 +146,7 @@ add_higher_taxonomy <- function(ppg) {
 #'
 #' @return Tibble
 #' @noRd
-load_data <- function(data_source = Sys.getenv("DATA_SOURCE")) {
+load_data <- function(data_source = "full") {
   if (data_source == "local") {
     ppg <- shinyppg::ppg_small
   } else if (data_source == "full") {

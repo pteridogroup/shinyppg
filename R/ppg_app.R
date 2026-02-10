@@ -13,13 +13,15 @@
 #' @export
 #' @examples
 #' if (interactive()) {
-#'   # Use sample data (fast, good for testing)
+#'   # Use full dataset
+#'   ppg_app("full")
+#'   # or
 #'   ppg_app()
 #'
-#'   # Use full dataset from GitHub
-#'   ppg_app("remote")
+#'   # Use sample data (fast, good for testing)
+#'   ppg_app("local")
 #' }
-ppg_app <- function(data_source = "local") {
+ppg_app <- function(data_source = "full") {
   ui <- fluidPage(
     titlePanel("PPG Taxonomic Database Viewer"),
     shiny::uiOutput("main_content")
