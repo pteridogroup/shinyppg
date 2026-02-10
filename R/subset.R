@@ -134,13 +134,10 @@ subset_app <- function() {
   server <- function(input, output, session) {
     # Load data
     ppg <- load_data_server("ppg")
-    # Get filter criteria from subset module
-    filter_criteria <- subset_server(id = "subset", ppg = ppg)
     # Display filtered data
     rows_selected <- display_ppg_server(
       "display_ppg",
-      ppg,
-      filter_criteria = filter_criteria
+      ppg
     )
   }
   shinyApp(ui, server)
