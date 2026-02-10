@@ -787,6 +787,45 @@ linkize_urls <- function(ppg, url_cols) {
     dplyr::mutate(dplyr::across(dplyr::all_of(url_cols), linkize_url_col))
 }
 
+#' Rename columns for user-friendly display
+#'
+#' Internal function
+#'
+#' @param ppg PPG dataframe
+#' @return PPG dataframe with renamed columns
+#' @noRd
+rename_columns_for_display <- function(ppg) {
+  # Define column name mappings (original -> display)
+  col_mapping <- c(
+    "scientificName" = "Name",
+    "scientificNameAuthorship" = "Author",
+    "taxonRank" = "Rank",
+    "taxonomicStatus" = "Taxonomic Status",
+    "nomenclaturalStatus" = "Nomenclatural Status",
+    "namePublishedIn" = "Published In",
+    "acceptedNameUsage" = "Accepted Name",
+    "parentNameUsage" = "Parent Name",
+    "modified" = "Modified",
+    "class" = "Class",
+    "subclass" = "Subclass",
+    "order" = "Order",
+    "suborder" = "Suborder",
+    "family" = "Family",
+    "subfamily" = "Subfamily",
+    "genus" = "Genus"
+  )
+
+  # Rename columns that exist in the dataframe
+  existing_cols <- intersect(names(col_mapping), names(ppg))
+  if (length(existing_cols) > 0) {
+    for (old_name in existing_cols) {
+      names(ppg)[names(ppg) == old_name] <- col_mapping[old_name]
+    }
+  }
+
+  return(ppg)
+}
+
 #' Make an empty version of PPG
 #'
 #' Internal function

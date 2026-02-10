@@ -4,7 +4,7 @@
 \alias{ppg_app}
 \title{PPG app}
 \usage{
-ppg_app(data_source = "local")
+ppg_app(data_source = "full")
 }
 \arguments{
 \item{data_source}{Where to load data from. Options are "local" (built-in
@@ -22,10 +22,12 @@ taxonomic database.
 }
 \examples{
 if (interactive()) {
-  # Use sample data (fast, good for testing)
+  # Use full dataset
+  ppg_app("full")
+  # or
   ppg_app()
 
-  # Use full dataset from GitHub
-  ppg_app("remote")
+  # Use sample data (fast, good for testing)
+  ppg_app("local")
 }
 }

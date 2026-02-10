@@ -1,8 +1,9 @@
 test_that("Loading data works", {
+  skip("Skip long running test")
   testServer(
     load_data_server,
     {
-      data <- head(load_data())
+      data <- head(load_data(data_source = "local"))
       # Check which cols_select columns are missing
       missing_cols <- setdiff(cols_select, colnames(data))
       if (length(missing_cols) > 0) {

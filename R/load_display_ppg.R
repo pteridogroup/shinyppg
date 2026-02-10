@@ -58,30 +58,36 @@ display_ppg_server <- function(id, ppg) {
     shinyjs::disable("show_synonyms")
     shinyjs::disable("show_children")
 
+    # Create a reactive for display data with renamed columns
+    ppg_display <- reactive({
+      rename_columns_for_display(ppg())
+    })
+
     # Set up PPG table
     render_table <- function() {
       DT::renderDataTable(
         {
           DT::datatable(
-            data = ppg(),
+            data = ppg_display(),
             rownames = FALSE,
             filter = "top",
             selection = "single",
             escape = FALSE,
             options = list(
               order = list(
-                list(select_sort_col(ppg(), "modified"), "desc"),
+                list(select_sort_col(ppg_display(), "Modified"), "desc"),
                 list(
-                  select_sort_col(ppg(), "scientificName"),
+                  select_sort_col(ppg_display(), "Name"),
                   "asc"
                 )
               ),
               columnDefs = list(
                 list(
                   targets = c(
-                    select_sort_col(ppg(), "taxonID"),
-                    select_sort_col(ppg(), "acceptedNameUsageID"),
-                    select_sort_col(ppg(), "parentNameUsageID")
+                    select_sort_col(ppg_display(), "taxonID"),
+                    select_sort_col(ppg_display(), "acceptedNameUsageID"),
+                    select_sort_col(ppg_display(), "parentNameUsageID"),
+                    select_sort_col(ppg_display(), "Modified")
                   ),
                   visible = FALSE
                 )
@@ -105,13 +111,13 @@ display_ppg_server <- function(id, ppg) {
       {
         if (!column_visibility()) {
           higher_taxa_cols <- c(
-            which(names(ppg()) == "class") - 1,
-            which(names(ppg()) == "subclass") - 1,
-            which(names(ppg()) == "order") - 1,
-            which(names(ppg()) == "suborder") - 1,
-            which(names(ppg()) == "family") - 1,
-            which(names(ppg()) == "subfamily") - 1,
-            which(names(ppg()) == "genus") - 1
+            which(names(ppg_display()) == "Class") - 1,
+            which(names(ppg_display()) == "Subclass") - 1,
+            which(names(ppg_display()) == "Order") - 1,
+            which(names(ppg_display()) == "Suborder") - 1,
+            which(names(ppg_display()) == "Family") - 1,
+            which(names(ppg_display()) == "Subfamily") - 1,
+            which(names(ppg_display()) == "Genus") - 1
           )
           DT::hideCols(dt_proxy, higher_taxa_cols)
         }
@@ -133,13 +139,13 @@ display_ppg_server <- function(id, ppg) {
 
       # Get column indices for higher taxa
       higher_taxa_cols <- c(
-        which(names(ppg()) == "class") - 1,
-        which(names(ppg()) == "subclass") - 1,
-        which(names(ppg()) == "order") - 1,
-        which(names(ppg()) == "suborder") - 1,
-        which(names(ppg()) == "family") - 1,
-        which(names(ppg()) == "subfamily") - 1,
-        which(names(ppg()) == "genus") - 1
+        which(names(ppg_display()) == "Class") - 1,
+        which(names(ppg_display()) == "Subclass") - 1,
+        which(names(ppg_display()) == "Order") - 1,
+        which(names(ppg_display()) == "Suborder") - 1,
+        which(names(ppg_display()) == "Family") - 1,
+        which(names(ppg_display()) == "Subfamily") - 1,
+        which(names(ppg_display()) == "Genus") - 1
       )
 
       # Show or hide columns without resetting search
@@ -251,8 +257,8 @@ display_ppg_server <- function(id, ppg) {
 
               # Search for exact taxonID in the taxonID column (column 0)
               # This ensures only one row matches
-              col_index <- which(names(ppg()) == "taxonID") - 1
-              search_cols <- rep("", ncol(ppg()))
+              col_index <- which(names(ppg_display()) == "taxonID") - 1
+              search_cols <- rep("", ncol(ppg_display()))
               search_cols[col_index + 1] <- parent_id
 
               DT::updateSearch(
@@ -286,8 +292,8 @@ display_ppg_server <- function(id, ppg) {
               DT::selectRows(dt_proxy, NULL)
 
               # Search for exact taxonID in the taxonID column
-              col_index <- which(names(ppg()) == "taxonID") - 1
-              search_cols <- rep("", ncol(ppg()))
+              col_index <- which(names(ppg_display()) == "taxonID") - 1
+              search_cols <- rep("", ncol(ppg_display()))
               search_cols[col_index + 1] <- accepted_id
 
               DT::updateSearch(
@@ -320,8 +326,11 @@ display_ppg_server <- function(id, ppg) {
               DT::selectRows(dt_proxy, NULL)
 
               # Search for taxonID in the acceptedNameUsageID column
-              col_index <- which(names(ppg()) == "acceptedNameUsageID") - 1
-              search_cols <- rep("", ncol(ppg()))
+              col_index <- which(
+                names(ppg_display()) == "acceptedNameUsageID"
+              ) -
+                1
+              search_cols <- rep("", ncol(ppg_display()))
               search_cols[col_index + 1] <- taxon_id
 
               DT::updateSearch(
@@ -351,8 +360,9 @@ display_ppg_server <- function(id, ppg) {
               DT::selectRows(dt_proxy, NULL)
 
               # Search for taxonID in the parentNameUsageID column
-              col_index <- which(names(ppg()) == "parentNameUsageID") - 1
-              search_cols <- rep("", ncol(ppg()))
+              col_index <- which(names(ppg_display()) == "parentNameUsageID") -
+                1
+              search_cols <- rep("", ncol(ppg_display()))
               search_cols[col_index + 1] <- taxon_id
 
               DT::updateSearch(
@@ -372,7 +382,7 @@ display_ppg_server <- function(id, ppg) {
         dt_proxy,
         keywords = list(
           global = "",
-          columns = rep("", ncol(ppg()))
+          columns = rep("", ncol(ppg_display()))
         )
       )
       # Clear selection
