@@ -5,7 +5,7 @@
 \alias{ppg_small}
 \title{PPG taxonomic data}
 \format{
-An object of class \code{data.frame} with 3217 rows and 14 columns.
+An object of class \code{data.frame} with 3232 rows and 19 columns.
 }
 \usage{
 ppg_small
