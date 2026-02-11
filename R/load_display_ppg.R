@@ -16,7 +16,8 @@ display_ppg_ui <- function(id) {
     actionButton(NS(id, "show_synonyms"), "Show synonyms"),
     actionButton(NS(id, "show_children"), "Show children"),
     actionButton(NS(id, "clear_search"), "Reset"),
-    actionButton(NS(id, "toggle_columns"), "Show higher taxa")
+    actionButton(NS(id, "toggle_columns"), "Show higher taxa"),
+    downloadButton(NS(id, "download_data"), "Download CSV")
   )
 }
 
@@ -386,6 +387,22 @@ display_ppg_server <- function(id, ppg) {
       # Clear selection
       DT::selectRows(dt_proxy, NULL)
     })
+
+    # Download currently displayed data as CSV
+    output$download_data <- downloadHandler(
+      filename = function() {
+        paste0("ppg_data_", format(Sys.Date(), "%Y%m%d"), ".csv")
+      },
+      content = function(file) {
+        # Get currently displayed rows after filtering
+        displayed_rows <- input$ppg_table_rows_all
+        if (is.null(displayed_rows)) {
+          displayed_rows <- seq_len(nrow(ppg_display()))
+        }
+        # Export the filtered data
+        write.csv(ppg_display()[displayed_rows, ], file, row.names = FALSE)
+      }
+    )
 
     return(selected_rows)
   })
