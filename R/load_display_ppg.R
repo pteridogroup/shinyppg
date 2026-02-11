@@ -15,8 +15,8 @@ display_ppg_ui <- function(id) {
     actionButton(NS(id, "jump_to_accepted"), "Jump to accepted"),
     actionButton(NS(id, "show_synonyms"), "Show synonyms"),
     actionButton(NS(id, "show_children"), "Show children"),
-    actionButton(NS(id, "clear_search"), "Reset"),
     actionButton(NS(id, "toggle_columns"), "Show higher taxa"),
+    actionButton(NS(id, "clear_search"), "Reset"),
     downloadButton(NS(id, "download_data"), "Download CSV")
   )
 }
