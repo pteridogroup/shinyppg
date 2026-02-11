@@ -1,6 +1,8 @@
 # shinyppg
 
-A Shiny app to view the Pteridophyte Phylogeny Group (PPG) taxonomic database.
+A [Shiny](https://shiny.posit.co/) app to view the [Pteridophyte Phylogeny Group (PPG)](https://pteridogroup.github.io/) taxonomic database.
+
+The app can be accessed at: <https://pteridogroup.shinyapps.io/shinyppg/>
 
 ## Installation
 
@@ -27,7 +29,7 @@ The app provides a viewer interface to browse and explore PPG taxonomic data. Yo
 The app is deployed on [shinyapps.io](https://www.shinyapps.io/).
 
 To deploy, use `rsconnect::deployApp()` (requires
-setting up an account on shinyapps.io and
+setting up an account on [shinyapps.io](https://www.shinyapps.io/) and
 [authenticating](https://docs.rstudio.com/shinyapps.io/getting-started.html#configure-rsconnect)).
 
 ## Development
