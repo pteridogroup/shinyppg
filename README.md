@@ -42,33 +42,3 @@ new version number (e.g., "0.0.0.9003")
 3. Run `Rscript data-raw/ppg_full.R` to download and process the new
 version
 4. The app heading will automatically display the updated version
-
-### Docker Development Environment
-
-To develop the app within the docker container, run:
-
-(variables `GITHUB_USER` and `GITHUB_TOKEN` must be provided for git functions to work)
-
-```
-docker run --rm -it \
-  -v ${PWD}:/srv/shiny-server \
-  -w /srv/shiny-server \
-  -e USERID=$(id -u) \
-  -e GROUPID=$(id -g) \
-  -e GITHUB_USER=${GITHUB_USER} \
-  -e GITHUB_TOKEN=${GITHUB_TOKEN} \
-  -p 3838:3838 \
-  joelnitta/shinyppg:latest bash
-```
-
-Inside the container, run `/usr/bin/shiny-start.sh` to start the shiny app.
-
-Attach a VS Code session to the running container (for some reason, if you don't do this, the env vars won't get passed correctly (T_T)​ ​ )
-
-Navigate to <http://localhost:3838/> to access the app.
-
-Kill the shiny-server with ctrl+c and re-run it as necessary during development to refresh with the latest code.
-
-Another terminal window (or VS Code session) can be opened inside the container for development.
-
-Inspect logs in the Docker container at `/var/log/shiny-server/`
