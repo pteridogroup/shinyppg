@@ -16,8 +16,7 @@ display_ppg_ui <- function(id) {
     actionButton(NS(id, "show_synonyms"), "Show synonyms"),
     actionButton(NS(id, "show_children"), "Show children"),
     actionButton(NS(id, "clear_search"), "Reset"),
-    actionButton(NS(id, "toggle_columns"), "Show higher taxa"),
-    textOutput(NS(id, "selected_rows_message"))
+    actionButton(NS(id, "toggle_columns"), "Show higher taxa")
   )
 }
 
@@ -388,10 +387,6 @@ display_ppg_server <- function(id, ppg) {
       DT::selectRows(dt_proxy, NULL)
     })
 
-    output$selected_rows_message <- renderText({
-      num_selected <- length(selected_rows())
-      paste("Number of rows selected:", num_selected)
-    })
     return(selected_rows)
   })
 }
