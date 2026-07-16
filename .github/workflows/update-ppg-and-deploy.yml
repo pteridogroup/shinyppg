@@ -19,9 +19,12 @@ jobs:
       - name: Check latest PPG release
         id: check
         run: |
-          latest_tag=$(curl -sS -H "Authorization: token ${GITHUB_TOKEN}" \
-            https://api.github.com/repos/pteridogroup/ppg/releases/latest \
-            | grep '"tag_name"' | sed -E 's/.*"tag_name": *"v?([^"]+)".*/\1/')
+          latest_tag=$(gh release list \
+            --repo pteridogroup/ppg \
+            --limit 1 \
+            --json tagName \
+            --jq '.[0].tagName' \
+            | sed 's/^v//')
           current_version=$(grep 'ppg_version <-' data-raw/ppg_version.R \
             | sed -E 's/.*"([^"]+)".*/\1/')
 
