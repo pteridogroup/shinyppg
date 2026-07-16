@@ -28,7 +28,14 @@ The app provides a viewer interface to browse and explore PPG taxonomic data. Yo
 
 The app is deployed on [shinyapps.io](https://www.shinyapps.io/).
 
-To deploy, use `rsconnect::deployApp()` (requires
+A scheduled GitHub Actions workflow
+([`.github/workflows/update-ppg-and-deploy.yml`](.github/workflows/update-ppg-and-deploy.yml))
+runs once a day and handles both updating the PPG data and deploying the app
+automatically (see [Development](#development) below for details). It can also
+be triggered manually from the
+[Actions tab](https://github.com/pteridogroup/shinyppg/actions/workflows/update-ppg-and-deploy.yml).
+
+To deploy manually instead, use `rsconnect::deployApp()` (requires
 setting up an account on [shinyapps.io](https://www.shinyapps.io/) and
 [authenticating](https://docs.rstudio.com/shinyapps.io/getting-started.html#configure-rsconnect)).
 
@@ -36,7 +43,13 @@ setting up an account on [shinyapps.io](https://www.shinyapps.io/) and
 
 ### Updating the PPG Version
 
-To update to a new PPG release version:
+Updating to a new PPG release version is automated: the daily GitHub Actions
+workflow checks the [latest PPG release](https://github.com/pteridogroup/ppg/releases/latest),
+and if it's newer than the version in `data-raw/ppg_version.R`, it updates the
+version, regenerates the data, commits the changes, and redeploys the app. No
+manual action is needed.
+
+To update manually instead:
 
 1. Edit `data-raw/ppg_version.R` and change the version string to the
 new version number (e.g., "0.0.0.9003")
