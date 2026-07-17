@@ -1,3 +1,6 @@
 .Rprofile
 secrets.csv
 working
+data-raw/
+tests/
+man/

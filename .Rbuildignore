@@ -1,5 +1,3 @@
-^renv$
-^renv\.lock$
 ^LICENSE\.md$
 \.lintr$
 \.Rprofile$
@@ -9,12 +7,8 @@
 ^\.rscignore$
 ^secrets\.csv$
 ^working$
-^Dockerfile$
-^ploomber$
-^shiny-start\.sh$
 ^\.env$
 ^\.load-env\.sh$
 ^\.vscode$
 ^\.dockerignore$
-^doc\.md$
 ^user_data$
