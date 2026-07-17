@@ -3,7 +3,13 @@ name: Update PPG data and deploy app
 on:
   schedule:
     - cron: "0 3 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: "Redeploy even if no new PPG release is found (e.g. to recover from a failed deploy)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -44,14 +50,14 @@ jobs:
           echo "new_version=$latest_tag" >> "$GITHUB_OUTPUT"
 
       - name: Set up R
-        if: steps.check.outputs.updated == 'true'
+        if: steps.check.outputs.updated == 'true' || github.event.inputs.force_deploy == 'true'
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: "release"
           use-public-rspm: true
 
       - name: Install dependencies
-        if: steps.check.outputs.updated == 'true'
+        if: steps.check.outputs.updated == 'true' || github.event.inputs.force_deploy == 'true'
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: |
@@ -80,7 +86,7 @@ jobs:
           git push
 
       - name: Deploy app to shinyapps.io
-        if: steps.check.outputs.updated == 'true'
+        if: steps.check.outputs.updated == 'true' || github.event.inputs.force_deploy == 'true'
         env:
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
