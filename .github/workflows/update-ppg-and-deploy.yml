@@ -107,6 +107,7 @@ jobs:
               appName = "shinyppg",
               account = "pteridogroup",
               server = "shinyapps.io",
-              forceUpdate = TRUE
+              forceUpdate = TRUE,
+              packageRepositoryResolutionR = "lockfile"
             )
           '
