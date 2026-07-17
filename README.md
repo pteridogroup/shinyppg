@@ -6,11 +6,22 @@ The app can be accessed at: <https://pteridogroup.shinyapps.io/shinyppg/>
 
 ## Installation
 
+### General usage
+
 Install from GitHub:
 
 ```r
 # install.packages("remotes")
 remotes::install_github("pteridogroup/shinyppg")
+```
+
+### Development
+
+Developers can install a local version from the project root:
+
+```r
+# install.packages("devtools")
+devtools::install()
 ```
 
 ## Usage
