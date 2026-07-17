@@ -56,6 +56,12 @@ jobs:
           r-version: "release"
           use-public-rspm: false
 
+      - name: Configure R repos
+        if: steps.check.outputs.updated == 'true' || github.event.inputs.force_deploy == 'true'
+        run: |
+          echo 'options(repos = c(CRAN = "https://cloud.r-project.org"))' | \
+            sudo tee -a "$(Rscript --vanilla -e 'cat(R.home("etc"))')/Rprofile.site"
+
       - name: Install dependencies
         if: steps.check.outputs.updated == 'true' || github.event.inputs.force_deploy == 'true'
         uses: r-lib/actions/setup-r-dependencies@v2
@@ -92,7 +98,6 @@ jobs:
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
         run: |
           Rscript -e '
-            options(repos = c(CRAN = "https://cloud.r-project.org"))
             rsconnect::setAccountInfo(
               name = "pteridogroup",
               token = Sys.getenv("SHINYAPPS_TOKEN"),
