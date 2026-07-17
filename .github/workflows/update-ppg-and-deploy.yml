@@ -71,7 +71,6 @@ jobs:
             any::devtools
             any::usethis
             any::cpp11
-            any::progress
           cache: true
 
       - name: Update PPG version and regenerate data
